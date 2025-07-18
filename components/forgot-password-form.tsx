@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Mail, CheckCircle } from "lucide-react";
+import { X, Mail } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
 
@@ -84,7 +84,7 @@ export function ForgotPasswordForm() {
           Forget Password
         </h2>
         <p className="mt-2 text-sm text-gray-600 text-center">
-          Enter your email and we'll send you a link to reset your password.
+          Enter your email and we ll send you a link to reset your password.
         </p>
       </div>
 
