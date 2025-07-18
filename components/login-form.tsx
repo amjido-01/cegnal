@@ -54,9 +54,17 @@ export function LoginForm() {
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               className="pl-10 pr-10"
+               value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
             />
-           
+             <button
+              type="button"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
+            </button>
           </div>
         </div>
 
