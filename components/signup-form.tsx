@@ -8,7 +8,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Eye, EyeOff, Mail, User, Lock, Gift, Check, X, Phone } from "lucide-react"
 
@@ -83,37 +83,6 @@ export function SignupForm() {
         <h2 className="text-3xl font-medium  text-[#151515] text-center">Create Account</h2>
         <p className="mt-2 text-[16px] font-normal text-[#5D5D5D] text-center">New users can earn up to ₦5000 upon Registration</p>
       </div>
-
-{/* <FormField
-            control={form.control}
-            name="emailOrUsername"
-            render={({ field }) => {
-              const emailValue = form.watch("emailOrUsername");
-
-              return (
-                <FormItem>
-                  <FormControl>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#151515]" />
-                      <Input
-                        placeholder="Enter email or username"
-                        className="pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                      {emailValue && (
-                        <X
-                          onClick={() => form.setValue("emailOrUsername", "")}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
-                        />
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
-          /> */}
           <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
          <FormField
@@ -126,9 +95,9 @@ export function SignupForm() {
                 <FormItem>
                   <FormControl>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#151515]" />
+                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#151515]" />
                       <Input
-                        placeholder="Enter email or username"
+                        placeholder="Enter email"
                         className="pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]"
                         disabled={isLoading}
                         {...field}
@@ -147,21 +116,37 @@ export function SignupForm() {
             }}
           />
 
-          <FormField
+         <FormField
             control={form.control}
             name="username"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#151515]" />
-                    <Input placeholder="Enter username"  className="pl-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]" {...field} />
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const usernameValue = form.watch("username");
+
+              return (
+                <FormItem>
+                  <FormControl>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#151515]" />
+                      <Input
+                        placeholder="Enter username"
+                        className="pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]"
+                        disabled={isLoading}
+                        {...field}
+                      />
+                      {usernameValue && (
+                        <X
+                          onClick={() => form.setValue("username", "")}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
+                        />
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
+
 
           <FormField
             control={form.control}
@@ -243,17 +228,25 @@ export function SignupForm() {
               <FormField
                 control={form.control}
                 name="phoneNumber"
-                render={({ field }) => (
+                render={({ field }) => {
+                   const phoneNumberValue = form.watch("phoneNumber");
+                  return (
                   <FormItem>
                     <FormControl>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#151515]" />
                         <Input placeholder="Phone number" className="pl-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]" {...field} />
+                         {phoneNumberValue && (
+                        <X
+                          onClick={() => form.setValue("phoneNumber", "")}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
+                        />
+                      )}
                       </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
+                )}}
               />
             </div>
           </div>
@@ -261,17 +254,25 @@ export function SignupForm() {
           <FormField
             control={form.control}
             name="referralCode"
-            render={({ field }) => (
+            render={({ field }) => {
+              const referralCodeValue = form.watch("referralCode")
+              return (
               <FormItem>
                 <FormControl>
                   <div className="relative">
                     <Gift className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#151515]" />
                     <Input placeholder="Referral code (optional)" className="pl-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]" {...field} />
+                    {referralCodeValue && (
+                        <X
+                          onClick={() => form.setValue("referralCode", "")}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
+                        />
+                      )}
                   </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
-            )}
+            )}}
           />
 
           <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
