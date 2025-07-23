@@ -208,7 +208,7 @@ export function LoginForm() {
 
       <div className="text-center">
         <Link
-          href="/create-account"
+          href="/signup"
           className="inline-flex items-center justify-center px-8 py-[12px] bg-[#DAE4FF] text-[#151515] text-base font-medium rounded-[12px] transition-colors"
         >
           Create new Account

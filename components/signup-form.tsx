@@ -200,7 +200,7 @@ export function SignupForm() {
             )}
           />
 
-          <div className="grid grid-cols-4 gap-6">
+          <div className="grid grid-cols-4 gap-14">
             <FormField
               control={form.control}
               name="countryCode"
@@ -282,7 +282,7 @@ export function SignupForm() {
       </Form>
 
       <div className="flex justify-between text-sm font-medium text-[16px] leading-[100%] tracking-[-2.8%]">
-        <Link href="/" className="text-[#172DDE] hover:text-blue-500">
+        <Link href="/signin" className="text-[#172DDE] hover:text-blue-500">
           Back to log in
         </Link>
         <Link href="/contact" className="text-[#172DDE] hover:text-blue-500">
