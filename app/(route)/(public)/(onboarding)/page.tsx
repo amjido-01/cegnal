@@ -136,6 +136,7 @@ function OnboardingFlow({
                   <Image
                     src="/coin.svg"
                     alt="coin"
+                    priority
                     width={1000}
                     height={1000}
                   />
@@ -143,6 +144,7 @@ function OnboardingFlow({
                   <Image
                     src="/wallet.svg"
                     alt="wallet"
+                    priority
                     width={1000}
                     height={1000}
                   />
@@ -204,10 +206,10 @@ function RoleSelectionScreen({
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <div className="text-center mb-12">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-900 rounded-lg flex items-center justify-center">
-            <BarChart3 className="w-8 h-8 text-white" />
+          <div className="flex justify-center mb-[24px] items-center">
+            <Image src="/welcome.svg" className="" width={70} height={70} alt="logo" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Join Cegnal</h1>
+          <h1 className="text-4xl font-bold text-[#000000] tracking-[-2.8%] leading-[40%]">Join Cegnal</h1>
         </div>
 
         <div className="space-y-4">
