@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { BarChart3 } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { LoginForm } from "@/components/login-form";
-import { SignupForm } from "@/components/signup-form";
+import { Register } from "../_components/register-screen";
+import { Login } from "../_components/login-screen";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
+  const router = useRouter()
   const [step, setStep] = useState<
     "loading" | "onboarding" | "role-selection" | "register" | "login" | "app"
   >("loading");
@@ -17,12 +19,14 @@ export default function HomePage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
-        const onboardingCompleted = localStorage.getItem(
-          "onboarding_completed"
-        );
+        const onboardingCompleted = localStorage.getItem("onboarding_completed");
+        const userRegistered = localStorage.getItem("user_registered");
         const savedUserRole = localStorage.getItem("user_role");
 
-        if (onboardingCompleted === "true" && savedUserRole) {
+        if (onboardingCompleted === "true" && userRegistered === "true" && savedUserRole) {
+          setUserRole(savedUserRole);
+          router.push("/dashboard") // Go directly to app if already registered
+        } else if (onboardingCompleted === "true" && savedUserRole) {
           setUserRole(savedUserRole);
           setStep("login");
         } else {
@@ -35,7 +39,7 @@ export default function HomePage() {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [router]);
 
   const handleOnboardingComplete = (role: string) => {
     if (role === "existing_user") {
@@ -48,12 +52,10 @@ export default function HomePage() {
     setStep("register");
   };
 
-  const handleResetOnboarding = () => {
-    localStorage.removeItem("onboarding_completed");
-    localStorage.removeItem("user_role");
-    setUserRole(null);
-    setStep("onboarding");
+  const handleRegisterSuccess = () => {
+    router.push("/dashboard")
   };
+
 
   if (step === "loading") return <SplashScreen />;
   if (step === "onboarding")
@@ -62,12 +64,12 @@ export default function HomePage() {
     return <RoleSelectionScreen onComplete={handleOnboardingComplete} />;
   if (step === "register" && userRole)
     return (
-      <Register role={userRole} onRegisterSuccess={() => setStep("app")} />
+      <Register 
+        userRole={userRole} 
+        onRegisterSuccess={handleRegisterSuccess} 
+      />
     );
-  if (step === "login") return <Login />;
-  return (
-    <MainApp userRole={userRole} onResetOnboarding={handleResetOnboarding} />
-  );
+  if (step === "login") return <Login onLoginSuccess={() => router.push("/dashboard")} />;
 }
 
 // Splash Screen
@@ -75,8 +77,8 @@ function SplashScreen() {
   return (
     <div className="min-h-screen bg-[#151515] flex items-center justify-center">
       <motion.div
-        initial={{ scale: 0.4, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
+        initial={{ scale: 0.3 }}
+        animate={{ scale: 1 }}
         transition={{ duration: 1.2, ease: "easeOut" }}
         className="text-center"
       >
@@ -127,7 +129,6 @@ function OnboardingFlow({
     <div className="min-h-screen bg-[#454545] text-white flex flex-col">
       <div className="flex-1 flex flex-col items-center justifycenter ">
         <div className="w-full max-w-sm rounded-b-[32px] bg-[#636262] border-red-500 px-6 py-8">
-
           <div className="">
             <div className="flex justify-center mb-8">
               <div className="w-64 h-64 flex items-center justify-center">
@@ -149,48 +150,45 @@ function OnboardingFlow({
               </div>
             </div>
 
-            <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold mb-4">
+            <div className="text-center mb-8 leading-[100%] tracking-[-2.8%]">
+              <h1 className="text-4xl font-bold text-[#FEFEFE] mb-4">
                 {onboardingSlides[currentSlide].title}
               </h1>
-              <p className="text-gray-400 text-sm leading-relaxed">
+              <p className="text-[#F6F6F6] font-normal text-[16px]">
                 {onboardingSlides[currentSlide].description}
               </p>
             </div>
 
-            <div className="flex justify-center gap-2 mb-8">
+            <div className="flex justify-center items-center gap-2 mb-8">
               {onboardingSlides.map((_, index) => (
                 <div
                   key={index}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentSlide ? "bg-blue-500" : "bg-gray-600"
+                  className={`transition-colors ${
+                    index === currentSlide ? "bg-[#5B8BFF]  w-[26px] h-[4px] rounded-[2px]" : "bg-[#D1D1D1] w-2 h-2 rounded-full"
                   }`}
                 />
               ))}
             </div>
           </div>
-
         </div>
         <div className="w-full mt-8 px-6">
-                 <Button
+          <Button
             onClick={handleNext}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium"
+            className="w-full bg-[#2E5DFC] hover:bg-blue-700 text-white py-3 rounded-lg font-medium"
           >
-            {currentSlide === onboardingSlides.length - 1
-              ? "Continue"
-              : "Get Started"}
+            Get Started
           </Button>
 
           <div className="text-center mt-4">
+            Have an account?
             <button
-              onClick={() => setCurrentStep("role-selection")}
-              className="text-gray-400 text-sm hover:text-white transition-colors"
+              onClick={() => onComplete("existing_user")}
+              className="text-gray-400 ml-1 text-sm hover:text-white transition-colors"
             >
-              Skip
+              Login
             </button>
           </div>
         </div>
-       
       </div>
     </div>
   );
@@ -241,108 +239,6 @@ function RoleSelectionScreen({
           </p>
         </div>
       </div>
-    </div>
-  );
-}
-
-// Register Form
-function Register({
-  role,
-  onRegisterSuccess,
-}: {
-  role: string;
-  onRegisterSuccess: () => void;
-}) {
-  const handleRegister = async (formData: any) => {
-    const dataToSend = { ...formData, role };
-
-    console.log("Registering with:", dataToSend);
-
-    // Simulate API call
-    setTimeout(() => {
-      localStorage.setItem("onboarding_completed", "true");
-      onRegisterSuccess();
-    }, 1000);
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12">
-      <div className="">
-        <div className="bg-white py-8 px-4 border sm:rounded-lg">
-          <SignupForm />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Login Screen
-function Login() {
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12">
-      <div className="">
-        <div className="bg-white py-8 px-4 border sm:rounded-lg">
-          <LoginForm />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Main App
-function MainApp({
-  userRole,
-  onResetOnboarding,
-}: {
-  userRole: string | null;
-  onResetOnboarding: () => void;
-}) {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center mr-3">
-                <BarChart3 className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-900">Cegnal</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600 capitalize">
-                {userRole === "trader"
-                  ? "Forex Trader"
-                  : userRole === "analyst"
-                  ? "Forex Analyst"
-                  : "User"}
-              </span>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-4">
-            Welcome to Cegnal!
-            {userRole === "trader" && " 📈"}
-            {userRole === "analyst" && " 📊"}
-          </h2>
-          <p className="text-gray-600 mb-4">
-            {userRole === "trader"
-              ? "Start receiving instant signals from top traders."
-              : userRole === "analyst"
-              ? "Share your expertise and help traders."
-              : "Welcome to your trading dashboard."}
-          </p>
-          <div className="flex gap-2">
-            <Button>Get Started</Button>
-            <Button variant="outline" onClick={onResetOnboarding}>
-              Reset Onboarding
-            </Button>
-          </div>
-        </div>
-      </main>
     </div>
   );
 }

@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { LoginForm } from "@/components/login-form";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
 
 const FormSchema = z.object({
   emailOrUsername: z
@@ -30,9 +29,11 @@ const FormSchema = z.object({
 
 type FormData = z.infer<typeof FormSchema>;
 
+interface LoginProps {
+  onLoginSuccess: () => void;
+}
 
-export default function Login() {
-  const router = useRouter();
+export function Login({ onLoginSuccess }: LoginProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (formData: FormData) => {
@@ -55,7 +56,7 @@ export default function Login() {
       if (response.ok) {
         localStorage.setItem("onboarding_completed", "true");
         localStorage.setItem("user_registered", "true");
-        router.push("/dashboard")
+        onLoginSuccess();
       } else {
         const errorData = await response.json();
         console.error("Login failed:", errorData);
