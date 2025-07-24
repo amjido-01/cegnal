@@ -47,9 +47,14 @@ const FormSchema = z.object({
     }),
 });
 
-export function LoginForm() {
+export function LoginForm({
+  onSubmit,
+  isLoading,
+}: {
+  onSubmit: (data: z.infer<typeof FormSchema>) => void;
+  isLoading: boolean;
+}) {
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -59,33 +64,6 @@ export function LoginForm() {
     },
   });
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
-    setIsLoading(true);
-
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Simulate successful login
-      // toast.success("Login successful!", {
-      //   description: `Welcome back! Redirecting to dashboard...`,
-      // })
-
-      console.log("Login data:", data);
-
-      // Here you would typically:
-      // 1. Make API call to authenticate user
-      // 2. Store auth tokens
-      // 3. Redirect to dashboard
-    } catch (error) {
-      console.log(error);
-      // toast.error("Login failed", {
-      //   description: "Please check your credentials and try again.",
-      // })
-    } finally {
-      setIsLoading(false);
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -208,7 +186,7 @@ export function LoginForm() {
 
       <div className="text-center">
         <Link
-          href="/signup"
+          href="/"
           className="inline-flex items-center justify-center px-8 py-[12px] bg-[#DAE4FF] text-[#151515] text-base font-medium rounded-[12px] transition-colors"
         >
           Create new Account
