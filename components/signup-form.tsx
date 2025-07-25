@@ -33,6 +33,7 @@ import {
   X,
   Phone,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const FormSchema = z.object({
   email: z.string().email({
@@ -93,6 +94,11 @@ export function SignupForm({
     },
   });
 
+  const {
+  formState: { errors },
+} = form;
+
+
   const password = form.watch("password");
 
   const passwordRequirements = [
@@ -127,7 +133,10 @@ export function SignupForm({
                       <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#151515]" />
                       <Input
                         placeholder="Enter email"
-                        className="pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]"
+                         className={cn(
+                "pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]",
+                errors.email && "border border-[#DA2C38] bg-[#FEF2F3]"
+              )}
                         disabled={isLoading}
                         {...field}
                       />
@@ -158,7 +167,10 @@ export function SignupForm({
                       <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#151515]" />
                       <Input
                         placeholder="Enter username"
-                        className="pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]"
+                        className={cn(
+                "pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]",
+                errors.email && "border border-[#DA2C38] bg-[#FEF2F3]"
+              )}
                         disabled={isLoading}
                         {...field}
                       />
@@ -187,7 +199,10 @@ export function SignupForm({
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="Password"
-                      className="pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]"
+                      className={cn(
+                "pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]",
+                errors.email && "border border-[#DA2C38] bg-[#FEF2F3]"
+              )}
                       {...field}
                     />
                     <button
@@ -274,7 +289,10 @@ export function SignupForm({
                           <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#151515]" />
                           <Input
                             placeholder="Phone number"
-                            className="pl-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]"
+                            className={cn(
+                "pl-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]",
+                errors.email && "border border-[#DA2C38] bg-[#FEF2F3]"
+              )}
                             {...field}
                           />
                           {phoneNumberValue && (

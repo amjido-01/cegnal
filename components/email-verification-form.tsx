@@ -4,7 +4,6 @@ import type React from "react";
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-// import { toast } from "sonner"
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +40,7 @@ type VerificationState = "initial" | "loading" | "success";
 export function EmailVerificationForm() {
   const [verificationState, setVerificationState] =
     useState<VerificationState>("initial");
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -54,15 +54,13 @@ export function EmailVerificationForm() {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // Simulate successful verification
     setVerificationState("success");
     console.log("Email verified:", data);
   }
 
   const handleProceed = () => {
-    // Navigate to dashboard or next step
     console.log("Proceeding to dashboard...");
-    // You can add navigation logic here
+    // Navigate to next step
   };
 
   if (verificationState === "success") {
@@ -72,7 +70,7 @@ export function EmailVerificationForm() {
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
             <Image
               src="/success.svg"
-              alt="Picture of the author"
+              alt="Verification Success"
               width={1000}
               height={1000}
             />
@@ -84,10 +82,7 @@ export function EmailVerificationForm() {
             Email Verified
           </h2>
           <p className="mt-4 text-[16px] leading-[140%] font-normal text-[#5D5D5D] px-4">
-            Lorem ipsum dolor sit amet consectetur adipiscing elit. Nunc lectus
-            vivamus dolor. Dolor ultrices lorem ipsum dolor sit amet consectetur
-            adipiscing elit. Nunc lectus vivamus dolor. Dolor ultrices lorem
-            ipsum dolor sit amet consectetur adipiscing elit.
+            Your email has been successfully verified. You can now proceed to use your account.
           </p>
         </div>
 
@@ -119,7 +114,7 @@ export function EmailVerificationForm() {
           <FormField
             control={form.control}
             name="otp"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem className="flex flex-col items-center space-y-4">
                 <FormControl>
                   <InputOTP
@@ -128,22 +123,17 @@ export function EmailVerificationForm() {
                     {...field}
                   >
                     <InputOTPGroup className="gap-[10px]">
-                      <InputOTPSlot
-                        index={0}
-                        className="w-12 h-12 text-center text-lg font-semibold border-2 focus:border-blue-500"
-                      />
-                      <InputOTPSlot
-                        index={1}
-                        className="w-12 h-12 text-center text-lg font-semibold border-2 focus:border-blue-500"
-                      />
-                      <InputOTPSlot
-                        index={2}
-                        className="w-12 h-12 text-center text-lg font-semibold border-2 focus:border-blue-500"
-                      />
-                      <InputOTPSlot
-                        index={3}
-                        className="w-12 h-12 text-center text-lg font-semibold border-2 focus:border-blue-500"
-                      />
+                      {[0, 1, 2, 3].map((index) => (
+                        <InputOTPSlot
+                          key={index}
+                          index={index}
+                          className={`w-12 h-12 text-center text-lg font-semibold border-2 rounded-md transition-colors duration-150 focus:outline-none ${
+                            fieldState.invalid
+                              ? "border-[#DA2C38] focus:ring-2 focus:ring-[#DA2C38] bg-[#FEF2F3]"
+                              : "border-gray-300 focus:ring-2 focus:ring-blue-500"
+                          }`}
+                        />
+                      ))}
                     </InputOTPGroup>
                   </InputOTP>
                 </FormControl>
@@ -153,10 +143,12 @@ export function EmailVerificationForm() {
           />
 
           <div className="text-center">
-            <span className="text-sm text-[#5D5D5D]">
-              {"Didn't receive code? "}
-            </span>
-            <button className="text-sm text-[#172DDE] font-medium">
+            <span className="text-sm text-[#5D5D5D]">{"Didn't receive code? "}</span>
+            <button
+              type="button"
+              onClick={() => console.log("Resend logic here")}
+              className="text-sm text-[#172DDE] font-medium"
+            >
               Resend Code
             </button>
           </div>
@@ -164,8 +156,9 @@ export function EmailVerificationForm() {
           <Button
             type="submit"
             className="w-full bg-[#2E5DFC] hover:bg-blue-500"
+            disabled={verificationState === "loading"}
           >
-            Continue
+            {verificationState === "loading" ? "Verifying..." : "Continue"}
           </Button>
         </form>
       </Form>
