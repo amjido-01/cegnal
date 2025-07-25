@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { BarChart3 } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Register } from "../_components/register-screen";
@@ -10,7 +9,7 @@ import { Login } from "../_components/login-screen";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
-  const router = useRouter()
+  const router = useRouter();
   const [step, setStep] = useState<
     "loading" | "onboarding" | "role-selection" | "register" | "login" | "app"
   >("loading");
@@ -19,13 +18,19 @@ export default function HomePage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
-        const onboardingCompleted = localStorage.getItem("onboarding_completed");
+        const onboardingCompleted = localStorage.getItem(
+          "onboarding_completed"
+        );
         const userRegistered = localStorage.getItem("user_registered");
         const savedUserRole = localStorage.getItem("user_role");
 
-        if (onboardingCompleted === "true" && userRegistered === "true" && savedUserRole) {
+        if (
+          onboardingCompleted === "true" &&
+          userRegistered === "true" &&
+          savedUserRole
+        ) {
           setUserRole(savedUserRole);
-          router.push("/dashboard") // Go directly to app if already registered
+          router.push("/dashboard"); // Go directly to app if already registered
         } else if (onboardingCompleted === "true" && savedUserRole) {
           setUserRole(savedUserRole);
           setStep("login");
@@ -53,9 +58,8 @@ export default function HomePage() {
   };
 
   const handleRegisterSuccess = () => {
-    router.push("/dashboard")
+    router.push("/verify-email");
   };
-
 
   if (step === "loading") return <SplashScreen />;
   if (step === "onboarding")
@@ -64,12 +68,10 @@ export default function HomePage() {
     return <RoleSelectionScreen onComplete={handleOnboardingComplete} />;
   if (step === "register" && userRole)
     return (
-      <Register 
-        userRole={userRole} 
-        onRegisterSuccess={handleRegisterSuccess} 
-      />
+      <Register userRole={userRole} onRegisterSuccess={handleRegisterSuccess} />
     );
-  if (step === "login") return <Login onLoginSuccess={() => router.push("/dashboard")} />;
+  if (step === "login")
+    return <Login onLoginSuccess={() => router.push("/dashboard")} />;
 }
 
 // Splash Screen
@@ -136,6 +138,7 @@ function OnboardingFlow({
                   <Image
                     src="/coin.svg"
                     alt="coin"
+                    priority
                     width={1000}
                     height={1000}
                   />
@@ -143,6 +146,7 @@ function OnboardingFlow({
                   <Image
                     src="/wallet.svg"
                     alt="wallet"
+                    priority
                     width={1000}
                     height={1000}
                   />
@@ -161,11 +165,20 @@ function OnboardingFlow({
 
             <div className="flex justify-center items-center gap-2 mb-8">
               {onboardingSlides.map((_, index) => (
-                <div
+                <motion.div
                   key={index}
-                  className={`transition-colors ${
-                    index === currentSlide ? "bg-[#5B8BFF]  w-[26px] h-[4px] rounded-[2px]" : "bg-[#D1D1D1] w-2 h-2 rounded-full"
-                  }`}
+                  initial={false}
+                  animate={{
+                    width: index === currentSlide ? 26 : 8,
+                    height: index === currentSlide ? 4 : 8,
+                    borderRadius: index === currentSlide ? 2 : 9999,
+                    backgroundColor:
+                      index === currentSlide ? "#5B8BFF" : "#D1D1D1",
+                  }}
+                  transition={{
+                    duration: 0.3,
+                    ease: "easeInOut",
+                  }}
                 />
               ))}
             </div>
@@ -204,10 +217,18 @@ function RoleSelectionScreen({
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6">
       <div className="w-full max-w-sm">
         <div className="text-center mb-12">
-          <div className="w-16 h-16 mx-auto mb-4 bg-gray-900 rounded-lg flex items-center justify-center">
-            <BarChart3 className="w-8 h-8 text-white" />
+          <div className="flex justify-center mb-[24px] items-center">
+            <Image
+              src="/welcome.svg"
+              className=""
+              width={70}
+              height={70}
+              alt="logo"
+            />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Join Cegnal</h1>
+          <h1 className="text-4xl font-bold text-[#000000] tracking-[-2.8%] leading-[40%]">
+            Join Cegnal
+          </h1>
         </div>
 
         <div className="space-y-4">

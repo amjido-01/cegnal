@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-// import { toast } from "sonner"
 import { z } from "zod";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, User, Lock, X } from "lucide-react";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 const FormSchema = z.object({
   emailOrUsername: z
@@ -27,7 +27,6 @@ const FormSchema = z.object({
     })
     .refine(
       (value) => {
-        // Check if it's a valid email or a valid username (at least 3 characters)
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const usernameRegex = /^[a-zA-Z0-9_]{3,}$/;
         return emailRegex.test(value) || usernameRegex.test(value);
@@ -64,6 +63,13 @@ export function LoginForm({
     },
   });
 
+  const {
+    formState: { errors },
+    watch,
+    setValue,
+  } = form;
+
+  const emailValue = watch("emailOrUsername");
 
   return (
     <div className="space-y-6">
@@ -75,37 +81,39 @@ export function LoginForm({
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {/* Email or Username */}
           <FormField
             control={form.control}
             name="emailOrUsername"
-            render={({ field }) => {
-              const emailValue = form.watch("emailOrUsername");
-
-              return (
-                <FormItem>
-                  <FormControl>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#151515]" />
-                      <Input
-                        placeholder="Enter email or username"
-                        className="pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]"
-                        disabled={isLoading}
-                        {...field}
-                      />
-                      {emailValue && (
-                        <X
-                          onClick={() => form.setValue("emailOrUsername", "")}
-                          className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
-                        />
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#151515]" />
+                    <Input
+                      placeholder="Enter email or username"
+                      className={cn(
+                        "pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]",
+                        errors.emailOrUsername &&
+                          "border border-[#DA2C38] bg-[#FEF2F3]"
                       )}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
+                      disabled={isLoading}
+                      {...field}
+                    />
+                    {emailValue && (
+                      <X
+                        onClick={() => setValue("emailOrUsername", "")}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 cursor-pointer"
+                      />
+                    )}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
+          {/* Password */}
           <FormField
             control={form.control}
             name="password"
@@ -117,7 +125,11 @@ export function LoginForm({
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="Password"
-                      className="pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]"
+                      className={cn(
+                        "pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]",
+                        errors.password &&
+                          "border border-[#DA2C38] bg-[#FEF2F3]"
+                      )}
                       disabled={isLoading}
                       {...field}
                     />
@@ -140,6 +152,7 @@ export function LoginForm({
             )}
           />
 
+          {/* Forgot Password */}
           <div className="text-right">
             <Link
               href="/forgot-password"
@@ -149,6 +162,7 @@ export function LoginForm({
             </Link>
           </div>
 
+          {/* Submit Button */}
           <Button
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700"
@@ -159,16 +173,14 @@ export function LoginForm({
         </form>
       </Form>
 
+      {/* OAuth Options */}
       <div className="mt-[32px]">
-        <div className="">
-          <Separator />
-        </div>
-
+        <Separator />
         <div className="mt-[32px] flex items-center justify-center gap-3">
           <Button variant="outline" className="w-[56px] bg-transparent">
             <Image
               src="/google.svg"
-              alt="Picture of the author"
+              alt="Google"
               width={500}
               height={500}
             />
@@ -176,7 +188,7 @@ export function LoginForm({
           <Button variant="outline" className="w-[56px] bg-transparent">
             <Image
               src="/apple.svg"
-              alt="Picture of the author"
+              alt="Apple"
               width={500}
               height={500}
             />
@@ -184,6 +196,7 @@ export function LoginForm({
         </div>
       </div>
 
+      {/* Create Account */}
       <div className="text-center">
         <Link
           href="/"

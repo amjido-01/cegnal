@@ -6,7 +6,6 @@ import { ChevronLeft } from "lucide-react"
 interface OnboardingNavigationProps {
   currentSlide: number
   totalSlides: number
-  onNext: () => void
   onPrevious: () => void
   onSkip: () => void
 }
@@ -14,7 +13,6 @@ interface OnboardingNavigationProps {
 export function OnboardingNavigation({
   currentSlide,
   totalSlides,
-  onNext,
   onPrevious,
   onSkip,
 }: OnboardingNavigationProps) {

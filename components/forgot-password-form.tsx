@@ -78,7 +78,7 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <div className="space-y-6 border py-8 px-4 sm:rounded-lg sm:px-10">
+    <div className="space-y-6 py-8 px-4 sm:px-10">
       <div>
         <h2 className="text-2xl font-bold text-gray-900 text-center">
           Forget Password
