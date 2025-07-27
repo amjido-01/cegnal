@@ -128,7 +128,7 @@ function OnboardingFlow({
   }
 
   return (
-    <div className="min-h-screen bg-[#454545] text-white flex flex-col">
+    <div className="min-h-screen bg-[#3D3D3D] text-white flex flex-col">
       <div className="flex-1 flex flex-col items-center justifycenter ">
         <div className="w-full max-w-sm rounded-b-[32px] bg-[#636262] border-red-500 px-6 py-8">
           <div className="">
