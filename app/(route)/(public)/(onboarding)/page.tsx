@@ -134,23 +134,13 @@ function OnboardingFlow({
           <div className="">
             <div className="flex justify-center mb-8">
               <div className="w-64 h-64 flex items-center justify-center">
-                {currentSlide === 0 ? (
-                  <Image
-                    src="/coin.svg"
-                    alt="coin"
-                    priority
-                    width={1000}
-                    height={1000}
-                  />
-                ) : (
-                  <Image
-                    src="/wallet.svg"
-                    alt="wallet"
-                    priority
-                    width={300}
-                    height={300}
-                  />
-                )}
+                <Image
+                  src={currentSlide === 0 ? "/coin.svg" : "/wallet.svg"}
+                  alt={currentSlide === 0 ? "coin" : "wallet"}
+                  width={256}
+                  height={256}
+                  className="object-contain"
+                />
               </div>
             </div>
 
