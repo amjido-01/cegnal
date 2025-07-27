@@ -147,8 +147,8 @@ function OnboardingFlow({
                     src="/wallet.svg"
                     alt="wallet"
                     priority
-                    width={1000}
-                    height={1000}
+                    width={300}
+                    height={300}
                   />
                 )}
               </div>
