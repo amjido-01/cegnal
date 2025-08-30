@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { zones } from "@/lib/zones";
 import { Badge } from "./ui/badge";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 
 interface TraderDetailProps {
@@ -15,160 +15,201 @@ interface TraderDetailProps {
   onBack?: () => void;
 }
 
+// Moved outside component to prevent recreation on every render
+const CATALOG_IMAGES = [
+  "/user.jpg",
+  "/user.jpg", 
+  "/user.jpg",
+  "/user.jpg",
+  "/user.jpg",
+  "/user.jpg",
+];
+
+const AUTO_ADVANCE_INTERVAL = 3000;
+
 export default function ZoneDetail({ zoneId, onBack }: TraderDetailProps) {
   const router = useRouter();
   const [showCatalogViewer, setShowCatalogViewer] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  
+  // Use ref to store timer to avoid stale closure issues
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const zone = zones.find((z) => z.id === zoneId);
+  // Memoize zone lookup to avoid searching on every render
+  const zone = useMemo(() => zones.find((z) => z.id === zoneId), [zoneId]);
 
-  const closeCatalogViewer = () => {
+  // Memoized handlers to prevent unnecessary re-renders
+  const closeCatalogViewer = useCallback(() => {
     setShowCatalogViewer(false);
-  };
+    setCurrentImageIndex(0);
+    setIsPaused(false);
+  }, []);
 
-  const nextImage = () => {
+  const nextImage = useCallback(() => {
     setCurrentImageIndex((prev) => {
       const nextIndex = prev + 1;
-      // If we're at the last image, close the viewer
-      if (nextIndex >= catalogImages.length) {
-        setTimeout(() => {
-          closeCatalogViewer();
-        }, 100); // Small delay for smooth transition
+      if (nextIndex >= CATALOG_IMAGES.length) {
+        // Use setTimeout to prevent state update during render
+        setTimeout(closeCatalogViewer, 100);
         return prev;
       }
       return nextIndex;
     });
-  };
+  }, [closeCatalogViewer]);
 
-  const prevImage = () => {
+  const prevImage = useCallback(() => {
     setCurrentImageIndex((prev) => Math.max(0, prev - 1));
-  };
+  }, []);
 
-  // Timer for auto-advancing images (WhatsApp style)
-  useEffect(() => {
-    if (!showCatalogViewer || isPaused) return;
+  const togglePause = useCallback(() => {
+    setIsPaused(prev => !prev);
+  }, []);
 
-    const timer = setInterval(() => {
-      nextImage();
-    }, 3000); // 3 seconds per image (adjust as needed)
-
-    return () => clearInterval(timer);
-  }, [showCatalogViewer, currentImageIndex, isPaused]);
-
-  // Fixed: Add closeCatalogViewer to dependencies
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (showCatalogViewer) {
-        if (e.key === "Escape") closeCatalogViewer();
-        if (e.key === "ArrowRight") nextImage();
-        if (e.key === "ArrowLeft") prevImage();
-        if (e.key === " ") {
-          // Spacebar to pause/play
-          e.preventDefault();
-          setIsPaused((prev) => !prev);
-        }
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyPress);
-    return () => document.removeEventListener("keydown", handleKeyPress);
-  }, [showCatalogViewer]); // Dependencies are fine as they are
-
-  console.log(zoneId);
-
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (onBack) {
       onBack();
     } else {
       router.back();
     }
-  };
+  }, [onBack, router]);
 
-  if (!zone) {
-    return <div className="p-6 text-red-500">Zone not found 🚫</div>;
-  }
+  // Optimized timer effect with proper cleanup
+  useEffect(() => {
+    if (!showCatalogViewer || isPaused) {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      return;
+    }
 
-  const renderStars = (rating: number) => {
+    timerRef.current = setInterval(nextImage, AUTO_ADVANCE_INTERVAL);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [showCatalogViewer, isPaused, nextImage]);
+
+  // Keyboard event handler with proper cleanup
+  useEffect(() => {
+    if (!showCatalogViewer) return;
+
+    const handleKeyPress = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case "Escape":
+          closeCatalogViewer();
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          nextImage();
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          prevImage();
+          break;
+        case " ":
+          e.preventDefault();
+          togglePause();
+          break;
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
+  }, [showCatalogViewer, closeCatalogViewer, nextImage, prevImage, togglePause]);
+
+  // Memoized star renderer to avoid recreation
+  const renderStars = useCallback((rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <span
         key={i}
-        className={`text-lg ${
-          i < rating ? "text-orange-400" : "text-gray-300"
-        }`}
+        className={`text-lg ${i < rating ? "text-orange-400" : "text-gray-300"}`}
       >
         ★
       </span>
     ));
-  };
+  }, []);
 
-  const catalogImages = [
-    "/user.jpg",
-    "/user.jpg",
-    "/user.jpg",
-    "/user.jpg",
-    "/user.jpg",
-    "/user.jpg",
-  ];
-
-  const openCatalogViewer = (index: number) => {
+  // Memoized catalog viewer handlers
+  const openCatalogViewer = useCallback((index: number) => {
     setCurrentImageIndex(index);
     setShowCatalogViewer(true);
-    setIsPaused(false); // Reset pause state when opening
-  };
+    setIsPaused(false);
+  }, []);
 
-  // Fixed: Add event handler with stopPropagation
-  const handleCloseClick = (e: React.MouseEvent) => {
+  const handleCloseClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     closeCatalogViewer();
-  };
+  }, [closeCatalogViewer]);
 
-  // Fixed: Add backdrop click handler
-  const handleBackdropClick = (e: React.MouseEvent) => {
+  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       closeCatalogViewer();
     }
-  };
+  }, [closeCatalogViewer]);
 
-  // Fixed: Prevent image container clicks from bubbling and pause/resume timer
-  const handleImageContainerClick = (e: React.MouseEvent) => {
+  const handleImageContainerClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsPaused((prev) => !prev); // Toggle pause on tap
-  };
+    togglePause();
+  }, [togglePause]);
 
-  // Handle manual navigation
-  const handleManualNext = (e: React.MouseEvent) => {
+  const handleManualNext = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsPaused(true); // Pause auto-advance when user manually navigates
+    setIsPaused(true);
     nextImage();
-  };
+  }, [nextImage]);
 
-  const handleManualPrev = (e: React.MouseEvent) => {
+  const handleManualPrev = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsPaused(true); // Pause auto-advance when user manually navigates
+    setIsPaused(true);
     prevImage();
-  };
+  }, [prevImage]);
+
+  // Memoized progress bar animation style - moved before early return
+  const getProgressBarStyle = useCallback((index: number) => {
+    if (index < currentImageIndex) return { width: '100%' };
+    if (index === currentImageIndex && !isPaused) {
+      return {
+        animation: `progressBar ${AUTO_ADVANCE_INTERVAL}ms linear forwards`
+      };
+    }
+    return { width: '0%' };
+  }, [currentImageIndex, isPaused]);
+
+  // Early return for missing zone - moved after all hooks
+  if (!zone) {
+    return (
+      <div className="p-6 text-red-500">
+        Zone not found 🚫
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="flex items-center gap-4 p-4">
+      <header className="flex items-center gap-4 p-4">
         <Button
           variant="ghost"
           size="sm"
           onClick={handleBack}
           className="p-0 h-auto hover:bg-transparent"
+          aria-label="Go back"
         >
           <ArrowLeft className="w-5 h-5 text-gray-700" />
         </Button>
         <h1 className="text-lg font-medium text-gray-900">Zones</h1>
-      </div>
+      </header>
 
-      <div className="p-4">
+      <main className="p-4">
         {/* Avatar and Name */}
-        <div className="flex flex-col items-start mb-6 px-2">
+        <section className="flex flex-col items-start mb-6 px-2">
           <Avatar className="w-[90px] h-[90px] mb-4">
-            <AvatarImage src={zone.avatar || "/placeholder.svg"} />
+            <AvatarImage src={zone.avatar || "/placeholder.svg"} alt={`${zone.name} avatar`} />
             <AvatarFallback>{zone.name[0]}</AvatarFallback>
           </Avatar>
           <h2 className="text-[39px] font-medium leading-[100%] tracking-[-2.8%] text-[#151515] mb-3">
@@ -178,12 +219,12 @@ export default function ZoneDetail({ zoneId, onBack }: TraderDetailProps) {
             Signal provider {zone.name} with {zone.reviews} reviews and trusted
             by {zone.subscribers} subscribers.
           </p>
-        </div>
+        </section>
+
         {/* Stats Section */}
-        <div className="space-y-4 mb-8 text-[#5D5D5D] font-normal text-[16px] leading-[100%] tracking-[-2.8%]">
-          {/* Status */}
+        <section className="space-y-4 mb-8 text-[#5D5D5D] font-normal text-[16px] leading-[100%] tracking-[-2.8%]">
           <div className="flex justify-between items-center px-2 py-3 border-b-2 border-[#D1D1D1]">
-            <span className="">Status</span>
+            <span>Status</span>
             <Badge
               variant="secondary"
               className="border-[#09DE78] bg-white text-[#09DE78]"
@@ -193,83 +234,90 @@ export default function ZoneDetail({ zoneId, onBack }: TraderDetailProps) {
             </Badge>
           </div>
 
-          {/* Win Rate */}
           <div className="flex justify-between items-center px-2 py-3 border-b-2 border-[#D1D1D1]">
-            <span className="">Win Rate</span>
+            <span>Win Rate</span>
             <span className="text-gray-900 font-medium">{zone.winRate}</span>
           </div>
 
-          {/* Loss Rate */}
           <div className="flex justify-between items-center px-2 py-3 border-b-2 border-[#D1D1D1]">
-            <span className="">Loss Rate</span>
+            <span>Loss Rate</span>
             <span className="text-gray-900 font-medium">{zone.lossRate}</span>
           </div>
 
-          {/* Ratings */}
           <div className="flex justify-between items-center px-2 py-3 border-b-2 border-[#D1D1D1]">
-            <span className="">Ratings</span>
+            <span>Ratings</span>
             <div className="flex gap-0.5">{renderStars(zone.stars)}</div>
           </div>
 
-          {/* Market Type */}
           <div className="flex justify-between items-center px-2 py-3 border-b-2 border-[#D1D1D1]">
-            <span className="">Market Type</span>
+            <span>Market Type</span>
             <span className="text-gray-900 font-medium">{zone.marketType}</span>
           </div>
-        </div>
+        </section>
+
         {/* Catalogs Section */}
-        <div className="my-8 px-2 py-4 bg-[#E7E7E7] rounded-md">
+        <section className="my-8 px-2 py-4 bg-[#E7E7E7] rounded-md">
           <h3 className="text-[22px] font-medium leading-[100%] text-[#000000] mb-4">
             Catalogs
           </h3>
           <div className="grid grid-cols-3 gap-3">
-            {catalogImages.map((image, index) => (
-              <div
+            {CATALOG_IMAGES.map((image, index) => (
+              <button
                 key={index}
-                className="aspect-square rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                type="button"
+                className="aspect-square rounded-lg overflow-hidden hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-blue-500"
                 onClick={() => openCatalogViewer(index)}
+                aria-label={`View trading chart ${index + 1}`}
               >
                 <Image
-                  src={image || "/placeholder.svg"}
+                  src={image}
                   alt={`Trading chart ${index + 1}`}
                   width={120}
                   height={120}
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
-              </div>
+              </button>
             ))}
           </div>
-        </div>
+        </section>
+
         {/* Join Button */}
         <Link
           href={`/payment/${zone.id}`}
-          className="w-full bg-[#2E5DFC] hover:bg-blue-700 text-white py-2 text-lg font-medium rounded-lg text-center block"
+          className="w-full bg-[#2E5DFC] hover:bg-blue-700 text-white py-2 text-lg font-medium rounded-lg text-center block transition-colors"
         >
           Join now - {zone.entryFee}
         </Link>
-      </div>
+      </main>
 
       {/* Catalog Viewer Modal */}
       {showCatalogViewer && (
         <div
           className="fixed inset-0 bg-black z-50 flex flex-col"
           onClick={handleBackdropClick}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="catalog-viewer-title"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 text-white">
-            <h2 className="text-lg font-medium">View Catalog</h2>
+          <header className="flex items-center justify-between p-4 text-white">
+            <h2 id="catalog-viewer-title" className="text-lg font-medium">
+              View Catalog ({currentImageIndex + 1} of {CATALOG_IMAGES.length})
+            </h2>
             <button
               onClick={handleCloseClick}
               className="p-2 hover:bg-white/10 rounded-full transition-colors z-10"
               type="button"
+              aria-label="Close catalog viewer"
             >
               <X className="w-6 h-6" />
             </button>
-          </div>
+          </header>
 
           {/* Progress Indicators */}
-          <div className="flex justify-center gap-2 px-4 mb-4">
-            {catalogImages.map((_, index) => (
+          <div className="flex justify-center gap-2 px-4 mb-4" role="progressbar" aria-label="Image progress">
+            {CATALOG_IMAGES.map((_, index) => (
               <div
                 key={index}
                 className="relative h-1 flex-1 max-w-12 bg-white/30 rounded-full overflow-hidden"
@@ -278,18 +326,11 @@ export default function ZoneDetail({ zoneId, onBack }: TraderDetailProps) {
                   className={`h-full bg-blue-500 transition-all duration-100 ease-linear ${
                     index < currentImageIndex
                       ? "w-full"
-                      : index === currentImageIndex
-                      ? isPaused
-                        ? "w-0"
-                        : "w-full animate-pulse"
+                      : index === currentImageIndex && !isPaused
+                      ? "w-full"
                       : "w-0"
                   }`}
-                  style={{
-                    animation:
-                      index === currentImageIndex && !isPaused
-                        ? "progressBar 3s linear forwards"
-                        : "none",
-                  }}
+                  style={getProgressBarStyle(index)}
                 />
               </div>
             ))}
@@ -299,34 +340,43 @@ export default function ZoneDetail({ zoneId, onBack }: TraderDetailProps) {
           <div
             className="flex-1 flex items-center justify-center px-4 cursor-pointer"
             onClick={handleImageContainerClick}
+            aria-label={isPaused ? "Resume slideshow" : "Pause slideshow"}
           >
             <div className="relative w-full max-w-md aspect-square">
               <Image
-                src={catalogImages[currentImageIndex] || "/placeholder.svg"}
+                src={CATALOG_IMAGES[currentImageIndex]}
                 alt={`Trading chart ${currentImageIndex + 1}`}
                 fill
                 className="object-contain rounded-lg"
+                priority
               />
             </div>
           </div>
 
-          {/* Navigation Areas (invisible) */}
-          <div
-            className="absolute inset-y-0 left-0 w-1/3 cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              prevImage();
-            }}
+          {/* Navigation Areas */}
+          <button
+            className="absolute inset-y-0 left-0 w-1/3 cursor-pointer opacity-0"
+            onClick={handleManualPrev}
+            type="button"
+            aria-label="Previous image"
+            disabled={currentImageIndex === 0}
           />
-          <div
-            className="absolute inset-y-0 right-0 w-1/3 cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              nextImage();
-            }}
+          <button
+            className="absolute inset-y-0 right-0 w-1/3 cursor-pointer opacity-0"
+            onClick={handleManualNext}
+            type="button"
+            aria-label="Next image"
+            disabled={currentImageIndex === CATALOG_IMAGES.length - 1}
           />
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes progressBar {
+          from { width: 0%; }
+          to { width: 100%; }
+        }
+      `}</style>
     </div>
   );
 }

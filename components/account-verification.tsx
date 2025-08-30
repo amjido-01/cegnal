@@ -39,7 +39,7 @@ type VerificationState = "initial" | "loading" | "success";
 export function AccountVerificationForm() {
   const [verificationState, setVerificationState] =
     useState<VerificationState>("initial");
-  const [accountNumber, setAccountNumber] = useState("");
+  // const [accountNumber, setAccountNumber] = useState("");
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),

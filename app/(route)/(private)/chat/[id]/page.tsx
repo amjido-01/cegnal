@@ -15,7 +15,9 @@ import { useState } from "react";
 export default function ChatPage() {
   const router = useRouter();
   const params = useParams();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isDisabled = params.id === "disabled";
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isRecording, setIsRecording] = useState(false);
   const [showVoiceMessage, setShowVoiceMessage] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
