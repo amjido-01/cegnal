@@ -1,3 +1,5 @@
+import ZonesTabs from "@/components/zone-tab";
+
 export default function Page() {
-  return <h1>Hello Next.js! Signal zone</h1>
+ return <ZonesTabs />;
 }

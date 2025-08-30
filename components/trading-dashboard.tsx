@@ -6,13 +6,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Star, CircleDollarSign } from "lucide-react";
 import Image from "next/image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useRouter } from "next/navigation";
 import { traders } from "@/lib/trader";
 import { zones } from "@/lib/zones";
+import Link from "next/link";
 
-
-export function TradingDashboard(){
-  const router = useRouter();
+export function TradingDashboard() {
   const tabs = ["All", "Zones", "Top-rated"];
 
   const renderStars = (rating: number) => {
@@ -26,9 +24,6 @@ export function TradingDashboard(){
     ));
   };
 
-  const handleViewZoneDetails = (id: number) => {
-    router.push(`/zone/${id}`);
-  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -198,12 +193,12 @@ export function TradingDashboard(){
                             </div>
                           </div>
 
-                          <Button
-                            onClick={() => handleViewZoneDetails(zone.id)}
-                            className="w-full bg-[#454545] hover:bg-gray-900 text-white"
+                          <Link
+                            href={`/zone/${zone.id}`}
+                            className="w-full bg-[#454545] hover:bg-gray-900 text-white px-4 py-2 rounded-md text-center block"
                           >
                             View Details
-                          </Button>
+                          </Link>
                         </div>
                       </CardContent>
                     </Card>

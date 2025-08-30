@@ -1,19 +1,19 @@
-import TraderDetail from "@/components/trader-detail";
+import TraderDetail from "@/components/zone-detail";
 import { zones } from "@/lib/zones";
 
-export default function TraderPage({
+export default async function ZonePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const paramsId = Number(params.id); // ✅ Convert from string
-
+  const resolvedParams = await params;
+  const paramsId = Number(resolvedParams.id);
+  
   const zone = zones.find((t) => t.id === paramsId);
-
+  
   if (!zone) {
     return <div className="p-6 text-red-500">Zone not found 🚫</div>;
   }
-
-  // ✅ Only pass the id
+  
   return <TraderDetail zoneId={paramsId} />;
 }
