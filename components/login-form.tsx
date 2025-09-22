@@ -15,12 +15,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
-import { Eye, EyeOff, User, Lock, X } from "lucide-react";
+import { Eye, EyeOff, User, Lock, X, AlertCircleIcon } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 
 const FormSchema = z.object({
-  emailOrUsername: z
+  email: z
     .string()
     .min(1, {
       message: "Email or username is required.",
@@ -28,8 +29,7 @@ const FormSchema = z.object({
     .refine(
       (value) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const usernameRegex = /^[a-zA-Z0-9_]{3,}$/;
-        return emailRegex.test(value) || usernameRegex.test(value);
+        return emailRegex.test(value);
       },
       {
         message:
@@ -49,16 +49,18 @@ const FormSchema = z.object({
 export function LoginForm({
   onSubmit,
   isLoading,
+  error,
 }: {
   onSubmit: (data: z.infer<typeof FormSchema>) => void;
   isLoading: boolean;
+  error: string | null;
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      emailOrUsername: "",
+      email: "",
       password: "",
     },
   });
@@ -69,7 +71,7 @@ export function LoginForm({
     setValue,
   } = form;
 
-  const emailValue = watch("emailOrUsername");
+  const emailValue = watch("email");
 
   return (
     <div className="space-y-6">
@@ -78,13 +80,19 @@ export function LoginForm({
           Login
         </h2>
       </div>
-
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>{error}</AlertTitle>
+          <AlertDescription></AlertDescription>
+        </Alert>
+      )}
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {/* Email or Username */}
           <FormField
             control={form.control}
-            name="emailOrUsername"
+            name="email"
             render={({ field }) => (
               <FormItem>
                 <FormControl>
@@ -94,15 +102,14 @@ export function LoginForm({
                       placeholder="Enter email or username"
                       className={cn(
                         "pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]",
-                        errors.emailOrUsername &&
-                          "border border-[#DA2C38] bg-[#FEF2F3]"
+                        errors.email && "border border-[#DA2C38] bg-[#FEF2F3]"
                       )}
                       disabled={isLoading}
                       {...field}
                     />
                     {emailValue && (
                       <X
-                        onClick={() => setValue("emailOrUsername", "")}
+                        onClick={() => setValue("email", "")}
                         className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 cursor-pointer"
                       />
                     )}
@@ -178,20 +185,10 @@ export function LoginForm({
         <Separator />
         <div className="mt-[32px] flex items-center justify-center gap-3">
           <Button variant="outline" className="w-[56px] bg-transparent">
-            <Image
-              src="/google.svg"
-              alt="Google"
-              width={500}
-              height={500}
-            />
+            <Image src="/google.svg" alt="Google" width={500} height={500} />
           </Button>
           <Button variant="outline" className="w-[56px] bg-transparent">
-            <Image
-              src="/apple.svg"
-              alt="Apple"
-              width={500}
-              height={500}
-            />
+            <Image src="/apple.svg" alt="Apple" width={500} height={500} />
           </Button>
         </div>
       </div>

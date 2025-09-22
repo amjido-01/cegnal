@@ -1,0 +1,242 @@
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+import api from "@/lib/axios";
+import { AxiosError } from "axios";
+import { RegisterPayload, LoginPayload, VerifyOtpPayload, User } from "@/types";
+import Cookies from "js-cookie";
+interface AuthState {
+  user: User | null;
+  accessToken: string | null;
+  refreshTokenValue: string | null;
+
+  loading: boolean;
+
+  _hasHydrated: boolean;
+
+  isLoggedIn: () => boolean;
+
+  setHasHydrated: (state: boolean) => void;
+  login: (payload: LoginPayload) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<string>;
+  verifyOtp: (payload: VerifyOtpPayload) => Promise<void>;
+  resendOtp: (email: string) => Promise<void>;
+  //   forgotPassword: (email: string) => Promise<void>;
+  //   resetPassword: (payload: ResetPasswordPayload) => Promise<void>;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<boolean>;
+  refreshToken: () => Promise<void>;
+}
+
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set, get) => ({
+      user: null,
+      accessToken: null,
+      refreshTokenValue: null,
+      loading: false,
+      _hasHydrated: false,
+
+      setHasHydrated: (state) => {
+        set({ _hasHydrated: state });
+      },
+
+      isLoggedIn: () => {
+        const state = get();
+        return !!state.accessToken;
+      },
+
+      register: async (payload) => {
+        set({ loading: true });
+        try {
+          const response = await api.post("/auth/register", payload);
+          console.log(response);
+          const { responseSuccessful, responseMessage } = response.data;
+
+          if (!responseSuccessful) {
+            throw new Error(responseMessage || "Registration failed");
+          }
+
+          return payload.email; // so frontend can redirect
+        } catch (err) {
+          const error = err as AxiosError<{ responseMessage: string }>;
+          const customMessage =
+            error.response?.data?.responseMessage || "Registration failed";
+          throw new Error(customMessage);
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      verifyOtp: async (payload) => {
+        set({ loading: true });
+        try {
+          console.log("Verifying OTP with payload:", payload);
+          const response = await api.post("/auth/verify-otp", payload);
+          const { responseSuccessful, responseBody, responseMessage } =
+            response.data;
+
+          if (!responseSuccessful) {
+            throw new Error(responseMessage || "OTP verification failed");
+          }
+
+          const { user, accessToken } = responseBody;
+          console.log("Verified user:", user, accessToken);
+          Cookies.set("accessToken", accessToken, {
+            expires: 1,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+          });
+          set({ user, accessToken });
+        } catch (err) {
+          const error = err as AxiosError<{ responseMessage: string }>;
+          const customMessage =
+            error.response?.data?.responseMessage || "OTP verification failed";
+          throw new Error(customMessage);
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      resendOtp: async (email) => {
+        set({ loading: true });
+        try {
+          const response = await api.post("/auth/resend-otp", { email });
+          const { responseSuccessful, responseMessage } = response.data;
+
+          if (!responseSuccessful) {
+            throw new Error(responseMessage || "OTP resend failed");
+          }
+        } catch (error) {
+          throw error;
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      login: async (payload) => {
+        set({ loading: true });
+
+        try {
+          const response = await api.post("/auth/login", payload);
+          const { responseBody } = response.data;
+          const { accessToken } = responseBody;
+          const { user } = responseBody
+          Cookies.set("accessToken", accessToken, {
+            expires: 1,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+          });
+
+          // Store the basic user and tokens
+          set({
+            accessToken,
+            user,
+          });
+        } catch (error) {
+          console.error("Login failed:", error);
+          throw error;
+        } finally {
+          set({ loading: false });
+        }
+      },
+
+      //   forgotPassword: async (email) => {
+      //     set({ loading: true });
+      //     try {
+      //       const response = await api.post("/auth/forgot", { email });
+      //       const { responseSuccessful, responseMessage } = response.data;
+
+      //       if (!responseSuccessful) {
+      //         throw new Error(responseMessage || "Failed to send reset email");
+      //       }
+
+      //       return responseMessage;
+      //     } catch (err) {
+      //       const error = err as AxiosError<{ responseMessage: string }>;
+      //       const customMessage = error?.response?.data?.responseMessage;
+      //       throw new Error(customMessage);
+      //     } finally {
+      //       set({ loading: false });
+      //     }
+      //   },
+
+      //   resetPassword: async (payload) => {
+      //     set({ loading: true });
+      //     try {
+      //       const response = await api.post("/auth/reset", payload);
+      //       const { responseSuccessful, responseMessage } = response.data;
+
+      //       if (!responseSuccessful) {
+      //         throw new Error(responseMessage || "Failed to reset password");
+      //       }
+
+      //       return responseMessage || "Password reset successfully";
+      //     } catch (err) {
+      //       const error = err as AxiosError<{ responseMessage: string }>;
+      //       const customMessage =
+      //         error.response?.data?.responseMessage || "Failed to reset password";
+      //       throw new Error(customMessage);
+      //     } finally {
+      //       set({ loading: false });
+      //     }
+      //   },
+
+      checkAuth: async () => {
+        const accessToken = get().accessToken;
+
+        if (!accessToken) {
+          set({ user: null, loading: false });
+          return false;
+        }
+
+        try {
+          const response = await api.get("/user/profile");
+          const { user } = response.data.responseBody;
+
+          set({ user }); // user now contains any business
+          return true;
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          set({ user: null, loading: false });
+          return false;
+        }
+      },
+
+      refreshToken: async () => {
+        try {
+          const response = await api.post("/auth/refresh");
+          const { accessToken } = response.data;
+          console.log(accessToken);
+          set({ accessToken });
+        } catch (error) {
+          console.error("Error refreshing token:", error);
+          set({ user: null, accessToken: null, refreshTokenValue: null });
+          throw error;
+        }
+      },
+
+      logout: async () => {
+        try {
+          await api.post("/auth/logout");
+        } catch (error) {
+          console.warn("Logout failed, but clearing user data anyway:", error);
+        }
+        set({ user: null, accessToken: null, refreshTokenValue: null });
+      },
+    }),
+    {
+      name: "auth-storage",
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        // user: state.user,
+        accessToken: state.accessToken,
+        refreshTokenValue: state.refreshTokenValue,
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.setHasHydrated(true);
+        }
+      },
+    }
+  )
+);

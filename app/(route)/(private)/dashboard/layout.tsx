@@ -10,6 +10,7 @@ import {
   Search,
 } from "lucide-react";
 import Link from "next/link";
+// import { useAuthStore } from "@/store/use-auth-store";
 
 export default function DashboardLayout({
   children,
@@ -18,6 +19,7 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  // const { logout } = useAuthStore();
  
   const hideHeader = pathname.includes("/settings");
   const isSignalZone = pathname.includes("/signal-zone");

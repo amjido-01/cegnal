@@ -32,8 +32,11 @@ import {
   Check,
   X,
   Phone,
+  AlertCircleIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+
 
 const FormSchema = z.object({
   email: z.string().email({
@@ -63,7 +66,7 @@ const FormSchema = z.object({
   countryCode: z.string().min(1, {
     message: "Please select a country code.",
   }),
-  phoneNumber: z
+  phone: z
     .string()
     .min(10, {
       message: "Phone number must be at least 10 digits.",
@@ -71,17 +74,23 @@ const FormSchema = z.object({
     .regex(/^\d+$/, {
       message: "Phone number must contain only digits.",
     }),
-  referralCode: z.string().optional(),
+  code: z.string().optional(),
+  // role: z.string(),
 });
 
 export function SignupForm({
   onSubmit,
   isLoading,
+  submitSuccess,
+  error,
 }: {
   onSubmit: (data: z.infer<typeof FormSchema>) => void;
   isLoading: boolean;
+  submitSuccess: boolean;
+  error: string | null;
 }) {
   const [showPassword, setShowPassword] = useState(false);
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -89,8 +98,8 @@ export function SignupForm({
       username: "",
       password: "",
       countryCode: "NG",
-      phoneNumber: "",
-      referralCode: "",
+      phone: "",
+      code: "",
     },
   });
 
@@ -118,6 +127,14 @@ export function SignupForm({
           New users can earn up to ₦5000 upon Registration
         </p>
       </div>
+      {error && 
+                <Alert variant="destructive">
+        <AlertCircleIcon />
+        <AlertTitle>{error}</AlertTitle>
+        <AlertDescription>
+        </AlertDescription>
+      </Alert>
+              }
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
@@ -137,7 +154,7 @@ export function SignupForm({
                 "pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]",
                 errors.email && "border border-[#DA2C38] bg-[#FEF2F3]"
               )}
-                        disabled={isLoading}
+                        // disabled={isLoading}
                         {...field}
                       />
                       {emailValue && (
@@ -169,9 +186,9 @@ export function SignupForm({
                         placeholder="Enter username"
                         className={cn(
                 "pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]",
-                errors.email && "border border-[#DA2C38] bg-[#FEF2F3]"
+                errors.username && "border border-[#DA2C38] bg-[#FEF2F3]"
               )}
-                        disabled={isLoading}
+                        // disabled={isLoading}
                         {...field}
                       />
                       {usernameValue && (
@@ -201,7 +218,7 @@ export function SignupForm({
                       placeholder="Password"
                       className={cn(
                 "pl-10 pr-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]",
-                errors.email && "border border-[#DA2C38] bg-[#FEF2F3]"
+                errors.password && "border border-[#DA2C38] bg-[#FEF2F3]"
               )}
                       {...field}
                     />
@@ -279,9 +296,9 @@ export function SignupForm({
             <div className="col-span-3">
               <FormField
                 control={form.control}
-                name="phoneNumber"
+                name="phone"
                 render={({ field }) => {
-                  const phoneNumberValue = form.watch("phoneNumber");
+                  const phoneNumberValue = form.watch("phone");
                   return (
                     <FormItem>
                       <FormControl>
@@ -291,13 +308,13 @@ export function SignupForm({
                             placeholder="Phone number"
                             className={cn(
                 "pl-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]",
-                errors.email && "border border-[#DA2C38] bg-[#FEF2F3]"
+                errors.phone && "border border-[#DA2C38] bg-[#FEF2F3]"
               )}
                             {...field}
                           />
                           {phoneNumberValue && (
                             <X
-                              onClick={() => form.setValue("phoneNumber", "")}
+                              onClick={() => form.setValue("phone", "")}
                               className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
                             />
                           )}
@@ -313,9 +330,9 @@ export function SignupForm({
 
           <FormField
             control={form.control}
-            name="referralCode"
+            name="code"
             render={({ field }) => {
-              const referralCodeValue = form.watch("referralCode");
+              const codeValue = form.watch("code");
               return (
                 <FormItem>
                   <FormControl>
@@ -326,9 +343,9 @@ export function SignupForm({
                         className="pl-10 placeholder:text-[#151515] placeholder:text-[14px] placeholder:font-medium placeholder:leading-[100%] placeholder:tracking-[-2.8%]"
                         {...field}
                       />
-                      {referralCodeValue && (
+                      {codeValue && (
                         <X
-                          onClick={() => form.setValue("referralCode", "")}
+                          onClick={() => form.setValue("code", "")}
                           className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"
                         />
                       )}
@@ -339,12 +356,17 @@ export function SignupForm({
               );
             }}
           />
-
+            {submitSuccess && (
+                <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md">
+                  Your account has been created successfully!
+                </div>
+              )}
           <Button
             type="submit"
+            disabled={isLoading}
             className="w-full bg-blue-600 hover:bg-blue-700"
           >
-            Submit
+            {isLoading ? "Creating account..." : "Create Account"}
           </Button>
         </form>
       </Form>

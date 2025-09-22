@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Register } from "../_components/register-screen";
-import { Login } from "../_components/login-screen";
+import { Register } from "@/app/(route)/(public)/_components/register-screen";
+import { Login } from "@/app/(route)/(public)/_components/login-screen";
 
 type Step =
   | "loading"
