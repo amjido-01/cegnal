@@ -14,7 +14,7 @@ const protectedPatterns = [
 
 // Public routes that should be hidden for authenticated users
 const authPages = ["/signin", 
-  // "/signup",
+  "/signup",
  ];
 
 export default async function middleware(req: NextRequest) {
