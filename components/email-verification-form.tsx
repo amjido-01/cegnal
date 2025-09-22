@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -18,49 +18,136 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { Suspense } from "react";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import Image from "next/image";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/use-auth-store";
+import { useResendTimer } from "@/hooks/use-resend-timer";
+import { useAlertManager } from "@/hooks/use-alert-manager";
+import { AxiosError } from "axios";
+import { CustomAlert } from "./custom-alert";
 
 const FormSchema = z.object({
   otp: z
     .string()
-    .min(4, {
-      message: "Your verification code must be 4 characters.",
-    })
-    .max(4, {
-      message: "Your verification code must be 4 characters.",
-    })
+    .min(6, { message: "Your verification code must be 6 characters." })
+    .max(6, { message: "Your verification code must be 6 characters." })
     .regex(/^\d+$/, {
       message: "Verification code must contain only digits.",
     }),
 });
 
-type VerificationState = "initial" | "loading" | "success";
+type VerificationState = "initial" | "success";
 
-export function EmailVerificationForm() {
+function OTPContent() {
+  const { verifyOtp, resendOtp, loading } = useAuthStore();
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email");
+  const router = useRouter();
+
+  const [resendLoading, setResendLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const [verificationState, setVerificationState] =
     useState<VerificationState>("initial");
 
+  const {
+    isDisabled: resendDisabled,
+    formattedTime,
+    startTimer,
+    resetTimer,
+    initializeTimer,
+  } = useResendTimer();
+
+  const { showAlert, alertType, alertMessage, showAlertMessage, hideAlert } =
+    useAlertManager();
+
+  useEffect(() => {
+    if (isInitialized) return;
+
+    const fromRegistration = localStorage.getItem("fromRegistration");
+    const hasActiveTimer = initializeTimer();
+
+    if (fromRegistration === "true") {
+      if (!hasActiveTimer) startTimer();
+      showAlertMessage("success", "OTP has been sent to your email");
+      localStorage.removeItem("fromRegistration");
+    }
+
+    setIsInitialized(true);
+  }, [isInitialized, initializeTimer, startTimer, showAlertMessage]);
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-    defaultValues: {
-      otp: "",
-    },
+    defaultValues: { otp: "" },
   });
 
   async function onSubmit(data: z.infer<typeof FormSchema>) {
-    setVerificationState("loading");
+    if (!email) {
+      showAlertMessage("error", "Invalid email");
+      return;
+    }
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    setVerificationState("success");
-    console.log("Email verified:", data);
+    try {
+      await verifyOtp({ email, otp: data.otp });
+      setVerificationState("success");
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        const message =
+          err.response?.data?.responseMessage || "Verification failed";
+        showAlertMessage("error", message);
+        console.error("OTP verification error (Axios):", err.response?.data);
+      } else if (err instanceof Error) {
+        showAlertMessage("error", err.message);
+        console.error("OTP verification error:", err.message);
+      } else {
+        showAlertMessage("error", "An unexpected error occurred");
+        console.error("OTP verification error (unknown):", err);
+      }
+    }
   }
 
+  const handleResend = async () => {
+    if (!email || resendLoading || resendDisabled) return;
+    setResendLoading(true);
+    try {
+      await resendOtp(email);
+      startTimer(3000);
+      showAlertMessage("success", "A new OTP has been sent to your email");
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        const message =
+          err.response?.data?.responseMessage || "Failed to resend OTP";
+        resetTimer();
+        showAlertMessage("error", message);
+        console.error("Resend OTP error (Axios):", err.response?.data);
+      } else if (err instanceof Error) {
+        resetTimer();
+        showAlertMessage("error", err.message);
+        console.error("Resend OTP error:", err.message);
+      } else {
+        resetTimer();
+        showAlertMessage("error", "An unexpected error occurred");
+        console.error("Resend OTP error (unknown):", err);
+      }
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   const handleProceed = () => {
-    console.log("Proceeding to dashboard...");
-    // Navigate to next step
+    const role = useAuthStore.getState().user?.role; // TRADER | ANALYST
+    switch (role) {
+      case "TRADER":
+        router.push("/dashboard");
+        break;
+      case "ANALYST":
+        router.push("/account-verification");
+        break;
+      default:
+        router.push("/signin");
+        break;
+    }
   };
 
   if (verificationState === "success") {
@@ -77,14 +164,11 @@ export function EmailVerificationForm() {
           </div>
         </div>
 
-        <div>
-          <h2 className="text-2xl font-medium tracking-[-2.8%] text-[#151515]">
-            Email Verified
-          </h2>
-          <p className="mt-4 text-[16px] leading-[140%] font-normal text-[#5D5D5D] px-4">
-            Your email has been successfully verified. You can now proceed to use your account.
-          </p>
-        </div>
+        <h2 className="text-2xl font-medium text-[#151515]">Email Verified</h2>
+        <p className="mt-4 text-[16px] text-[#5D5D5D]">
+          Your email has been successfully verified. You can now proceed to use
+          your account.
+        </p>
 
         <Button
           onClick={handleProceed}
@@ -99,13 +183,19 @@ export function EmailVerificationForm() {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-medium tracking-[-2.8%] text-[#151515]">
-          Verify Email
-        </h2>
-        <p className="mt-2 text-[16px] leading-[100%] font-medium text-[#5D5D5D]">
+        {showAlert && (
+          <CustomAlert
+            type={alertType}
+            message={alertMessage}
+            onClose={hideAlert}
+          />
+        )}
+
+        <h2 className="text-2xl font-medium text-[#151515]">Verify Email</h2>
+        <p className="mt-2 text-[16px] text-[#5D5D5D]">
           We sent a message to{" "}
-          <span className="font-medium text-[#151515]">Ric...@gmail.com</span>{" "}
-          with a code to verify your account
+          <span className="font-medium text-[#151515]">{email}</span> with a
+          code to verify your account
         </p>
       </div>
 
@@ -118,12 +208,12 @@ export function EmailVerificationForm() {
               <FormItem className="flex flex-col items-center space-y-4">
                 <FormControl>
                   <InputOTP
-                    maxLength={4}
+                    maxLength={6}
                     pattern={REGEXP_ONLY_DIGITS}
                     {...field}
                   >
                     <InputOTPGroup className="gap-[10px]">
-                      {[0, 1, 2, 3].map((index) => (
+                      {[0, 1, 2, 3, 4, 5].map((index) => (
                         <InputOTPSlot
                           key={index}
                           index={index}
@@ -143,25 +233,44 @@ export function EmailVerificationForm() {
           />
 
           <div className="text-center">
-            <span className="text-sm text-[#5D5D5D]">{"Didn't receive code? "}</span>
-            <button
-              type="button"
-              onClick={() => console.log("Resend logic here")}
-              className="text-sm text-[#172DDE] font-medium"
-            >
-              Resend Code
-            </button>
+            <p className="text-gray-600">
+              {"Didn't receive code? "}
+              {resendLoading ? (
+                <span className="text-gray-400 font-medium">Sending...</span>
+              ) : resendDisabled ? (
+                <span className="text-gray-400">
+                  Resend in{" "}
+                  <span className="font-semibold">{formattedTime}</span>
+                </span>
+              ) : (
+                <Button
+                  variant="link"
+                  onClick={handleResend}
+                  className="px-0 font-medium text-blue-600 hover:text-blue-800"
+                >
+                  Resend
+                </Button>
+              )}
+            </p>
           </div>
 
           <Button
             type="submit"
             className="w-full bg-[#2E5DFC] hover:bg-blue-500"
-            disabled={verificationState === "loading"}
+            disabled={loading}
           >
-            {verificationState === "loading" ? "Verifying..." : "Continue"}
+            {loading ? "Processing..." : "Continue"}
           </Button>
         </form>
       </Form>
     </div>
   );
+}
+
+export function EmailVerificationForm() {
+  return(
+  <Suspense fallback={<div>Loading...</div>}>
+      <OTPContent />
+    </Suspense>
+  )
 }

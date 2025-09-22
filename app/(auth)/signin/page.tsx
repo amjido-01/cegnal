@@ -4,9 +4,10 @@ import { useState } from "react";
 import { LoginForm } from "@/components/login-form";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/use-auth-store";
 
 const FormSchema = z.object({
-  emailOrUsername: z
+  email: z
     .string()
     .min(1, {
       message: "Email or username is required.",
@@ -33,9 +34,14 @@ type FormData = z.infer<typeof FormSchema>;
 
 export default function Login() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const { login, loading } = useAuthStore();
+  // const [isLoading, setIsLoading] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [submitSuccess, setSubmitSuccess] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async (formData: FormData) => {
+    setError(null);
     const result = FormSchema.safeParse(formData);
 
     if (!result.success) {
@@ -43,34 +49,24 @@ export default function Login() {
       return;
     }
 
-    setIsLoading(true);
 
     try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(result.data),
+     await login({
+        email: formData.email,
+        password: formData.password,
       });
-
-      if (response.ok) {
-        localStorage.setItem("onboarding_completed", "true");
-        localStorage.setItem("user_registered", "true");
-        router.push("/dashboard")
-      } else {
-        const errorData = await response.json();
-        console.error("Login failed:", errorData);
-      }
+      setSubmitSuccess(true);
+      router.push('/dashboard')
+      console.log("Login successful");
     } catch (error) {
       console.error("Login error:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-6">
       <div className="w-full max-w-md">
-        <LoginForm onSubmit={handleLogin} isLoading={isLoading} />
+        <LoginForm error={error} onSubmit={handleLogin} isLoading={loading} />
       </div>
     </div>
   );
