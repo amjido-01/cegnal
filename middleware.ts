@@ -13,7 +13,8 @@ const protectedPatterns = [
 ];
 
 // Public routes that should be hidden for authenticated users
-const authPages = ["/signin", 
+const authPages = [
+  "/signin", 
   "/signup",
  ];
 
@@ -40,13 +41,14 @@ export default async function middleware(req: NextRequest) {
 
   try {
     // Verify token
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const verified = await jose.jwtVerify(
       token,
       new TextEncoder().encode(process.env.JWT_SECRET as string)
     );
 
     // ✅ Log decoded payload
-    console.log("Verified JWT payload:", verified.payload);
+    // console.log("Verified JWT payload:", verified.payload);
 
     // If user is on signin/signup but already logged in → redirect to dashboard
     if (isAuthPage) {
