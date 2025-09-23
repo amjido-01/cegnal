@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { LoginForm } from "@/components/login-form";
 import { z } from "zod";
+import { AxiosError } from "axios";
 import { useAuthStore } from "@/store/use-auth-store";
+
 const FormSchema = z.object({
   email: z
     .string()
@@ -57,9 +59,20 @@ export function Login({ onLoginSuccess }: LoginProps) {
       setSubmitSuccess(true);
       onLoginSuccess()
       console.log("Login successful");
-    } catch (error) {
-      console.error("Login error:", error);
-    }
+    }  catch (err: unknown) {
+          if (err instanceof AxiosError) {
+            const message =
+              err.response?.data?.responseMessage || "Login request failed";
+            setError(message);
+            console.error("Login error (Axios):", message, err.response?.data);
+          } else if (err instanceof Error) {
+            setError(err.message);
+            console.error("Login error:", err.message);
+          } else {
+            setError("An unexpected error occurred");
+            console.error("Login error (unknown):", err);
+          }
+        }
   };
 
 

@@ -5,6 +5,7 @@ import { LoginForm } from "@/components/login-form";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/use-auth-store";
+import { AxiosError } from "axios";
 
 const FormSchema = z.object({
   email: z
@@ -22,23 +23,20 @@ const FormSchema = z.object({
         message: "Enter a valid email or username (at least 3 characters).",
       }
     ),
-  password: z
-    .string()
-    .min(6, {
-      message: "Password must be at least 6 characters.",
-    }),
+  password: z.string().min(6, {
+    message: "Password must be at least 6 characters.",
+  }),
 });
 
 type FormData = z.infer<typeof FormSchema>;
-
 
 export default function Login() {
   const router = useRouter();
   const { login, loading } = useAuthStore();
   // const [isLoading, setIsLoading] = useState(false);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [submitSuccess, setSubmitSuccess] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async (formData: FormData) => {
     setError(null);
@@ -49,17 +47,27 @@ export default function Login() {
       return;
     }
 
-
     try {
-     await login({
+      await login({
         email: formData.email,
         password: formData.password,
       });
       setSubmitSuccess(true);
-      router.push('/dashboard')
+      router.push("/dashboard");
       console.log("Login successful");
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        const message =
+          err.response?.data?.responseMessage || "Login request failed";
+        setError(message);
+        console.error("Login error (Axios):", message, err.response?.data);
+      } else if (err instanceof Error) {
+        setError(err.message);
+        console.error("Login error:", err.message);
+      } else {
+        setError("An unexpected error occurred");
+        console.error("Login error (unknown):", err);
+      }
     }
   };
 
