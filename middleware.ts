@@ -16,6 +16,7 @@ const protectedPatterns = [
 const authPages = [
   "/signin", 
   "/signup",
+  "/"
  ];
 
 export default async function middleware(req: NextRequest) {

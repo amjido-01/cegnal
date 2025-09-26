@@ -14,7 +14,6 @@ interface AuthState {
   _hasHydrated: boolean;
 
   isLoggedIn: () => boolean;
-
   setHasHydrated: (state: boolean) => void;
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<string>;
