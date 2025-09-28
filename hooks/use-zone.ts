@@ -11,8 +11,10 @@ export interface Zone {
   avatarUrl: string;
   createdBy: string;
   noOfMembers: number;
-  price: number;
+  isPaid: boolean;
+  price: number; // still number, but controlled by isPaid
 }
+
 
 // Response Type
 export interface TopTradersResponse {

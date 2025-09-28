@@ -6,12 +6,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Badge } from "./ui/badge";
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useZones } from "@/hooks/use-zone";
-
+import { useTopTraders } from "@/hooks/use-trader";
+import { Zone } from "@/types";
 interface TraderDetailProps {
-  zoneId?: string;
+  zone: Zone;
   onBack?: () => void;
 }
 
@@ -27,9 +28,11 @@ const CATALOG_IMAGES = [
 
 const AUTO_ADVANCE_INTERVAL = 3000;
 
-export default function ZoneDetail({ zoneId, onBack }: TraderDetailProps) {
+export default function ZoneDetail({ zone, onBack }: TraderDetailProps) {
   const router = useRouter();
-  const { zones } = useZones();
+  const { topTraders } = useTopTraders()
+  const { zones, isFetchingZones, zonesError } = useZones()
+  console.log(zone.id, "zones")
 
   const [showCatalogViewer, setShowCatalogViewer] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -37,11 +40,6 @@ export default function ZoneDetail({ zoneId, onBack }: TraderDetailProps) {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // ✅ Find zone by ID
-const zone = useMemo(() => {
-  if (!zones) return undefined
-  return zones.find((z) => String(z.id) === String(zoneId))
-}, [zones, zoneId])
   // ✅ Close catalog viewer
   const closeCatalogViewer = useCallback(() => {
     setShowCatalogViewer(false);
@@ -188,7 +186,7 @@ const zone = useMemo(() => {
 
   // ✅ Early return if zone not found
   if (!zone) {
-    return <div className="p-6 text-red-500">Zone not found 🚫</div>;
+    return <div className="p-6 text-red-500">trader not found 🚫</div>;
   }
 
   // ✅ Safe fallbacks for missing API fields
@@ -230,11 +228,10 @@ const zone = useMemo(() => {
             <AvatarFallback>{name[0]}</AvatarFallback>
           </Avatar>
           <h2 className="text-[39px] font-medium text-[#151515] mb-3">
-            {name}
+            {zone.zoneName}
           </h2>
           <p className="text-[16px] text-[#5D5D5D]">
-            Signal provider {name} with {reviews} reviews and trusted by{" "}
-            {subscribers} subscribers.
+           {zone.description}
           </p>
         </section>
 

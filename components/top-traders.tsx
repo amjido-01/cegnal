@@ -26,6 +26,7 @@ export function TopTraders() {
     const handleViewMore = () => {
     setVisibleCount((prev) => prev + 3);
   };
+  console.log(topTraders)
 
    if (isFetchingTopTraders) return <TopTradersSkeleton />; // skeleton
   if (topTradersError) return <div>Error loading products</div>;
@@ -43,7 +44,7 @@ export function TopTraders() {
                     {topTraders.slice(0, visibleCount).map((trader, idx) => (
                         <Link
                       key={idx}
-                      href={`/trader/${encodeURIComponent(trader.zoneName)}`}
+                      href={`/trader/${encodeURIComponent(trader._id)}`}
                       className="block"
                     >
                     <Card
@@ -53,20 +54,20 @@ export function TopTraders() {
                       <CardContent className="p-[12px]">
                         <Avatar className="w-12 h-12 mxauto mb-3">
                             <AvatarImage
-                              src={trader.avatarUrl || "/placeholder.svg"}
+                              src={trader.image || "/placeholder.svg"}
                             />
                             <AvatarFallback>
-                              {trader.zoneName[0]}
+                              {trader.email[0]}
                             </AvatarFallback>
                           </Avatar>
                         <h4 className="font-medium text-sm text-gray-900 mb-1">
-                          {trader.zoneName}
+                          {trader.username}
                         </h4>
-                        <p className="text-sm font-medium leading-[100%] text-[#454545] mb-2">
+                        {/* <p className="text-sm font-medium leading-[100%] text-[#454545] mb-2">
                           {trader.price}
-                        </p>
+                        </p> */}
                         <div className="flex justify-center gap-0.5">
-                          {renderStars(5)}
+                          {renderStars(3)}
                         </div>
                       </CardContent>
                     </Card>

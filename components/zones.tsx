@@ -38,24 +38,26 @@ export function Zones() {
                     <AvatarImage src={zone.avatarUrl} />
                     <AvatarFallback>{zone.zoneName[0]}</AvatarFallback>
                   </Avatar>
-                  <span className="font-medium text-gray-900">{zone.zoneName}</span>
+                  <span className="font-medium text-gray-900">
+                    {zone.zoneName}
+                  </span>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-gray-600">
-                    1000 Reviews
-                  </p>
-                  <div className="flex gap-0.5 mt-1">
-                    {renderStars(5)}
-                  </div>
+                  <p className="text-sm text-gray-600">1000 Reviews</p>
+                  <div className="flex gap-0.5 mt-1">{renderStars(5)}</div>
                 </div>
               </div>
 
               <div className="bg-[#E7E7E7] rounded-[8px] p-2">
                 <div className="grid grid-cols-3 gap-4 mb-4 p-3 divide-x divide-[#D1D1D1]">
                   <div className="text-center">
-                    <p className="font-medium text-gray-900 text-sm">
-                      {zone.price}
-                    </p>
+                    {zone.isPaid ? (
+                      <p className="font-medium text-gray-900 text-sm">
+                        ${zone.price}
+                      </p>
+                    ) : (
+                      <p className="font-medium text-gray-900 text-sm"></p>
+                    )}
                     <p className="text-xs text-gray-600">Entry Fee</p>
                   </div>
                   <div className="text-center">
@@ -65,15 +67,13 @@ export function Zones() {
                     <p className="text-xs text-gray-600">Subscribers</p>
                   </div>
                   <div className="text-center">
-                    <p className="font-medium text-gray-900 text-sm">
-                      {70}
-                    </p>
+                    <p className="font-medium text-gray-900 text-sm">{70}</p>
                     <p className="text-xs text-gray-600">Win Rates</p>
                   </div>
                 </div>
 
                 <Link
-                  href={`/zone/${zone.id}`}
+                  href={`/zone/${encodeURIComponent(zone.id)}`}
                   className="w-full bg-[#454545] hover:bg-gray-900 text-white px-4 py-2 rounded-md text-center block"
                 >
                   View Details

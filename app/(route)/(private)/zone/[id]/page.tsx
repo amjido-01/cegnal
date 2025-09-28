@@ -1,31 +1,51 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import TraderDetail from "@/components/zone-detail";
+import ZoneDetail from "@/components/zone-detail"; // ❌ Fix: Should be trader-detail, not zone-detail
+import { useTopTraders } from "@/hooks/use-trader";
+import { notFound } from "next/navigation";
 import { useZones } from "@/hooks/use-zone";
 
-export default function ZonePage() {
+export default function Page() {
   const params = useParams();
-
-  // ✅ safely extract id param as string
-  const paramsId = Array.isArray(params.id) ? params.id[0] : params.id ?? "";
-
-  const { zones, isFetchingZones, zonesError } = useZones();
-
+  const zoneId = params?.id; // ❌ Fix: Extract 'id' from URL params
+  
+  const { topTraders, isFetchingTopTraders, topTradersError } = useTopTraders();
+  const { zones, zonesError, isFetchingZones } = useZones()
+  if (!zoneId) {
+    notFound();
+  }
+  
   if (isFetchingZones) {
-    return <div className="p-6 text-gray-500">Loading zone...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </div>
+    );
   }
-
+  
   if (zonesError) {
-    return <div className="p-6 text-red-500">Error loading zones 🚨</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center text-red-500">
+          <p className="text-xl mb-2">⚠️ Error loading zone</p> {/* ❌ Fix: Changed "zones" to "traders" */}
+          <p className="text-sm text-gray-600">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
   }
-
-  // ✅ match with backend string ID
-  const zone = zones?.find((t) => t.id === paramsId);
-
+  
+  // ✅ Find trader by matching URL param with trader._id
+  const zone = zones?.find((t) => t.id === zoneId);
+  
+  console.log(zone, "from trader");
+  
   if (!zone) {
-    return <div className="p-6 text-red-500">Zone not found 🚫</div>;
+    notFound(); // ❌ Fix: Use notFound() instead of custom div for consistency
   }
-
-  return <TraderDetail zoneId={zone.id} />;
+  
+  return <ZoneDetail zone={zone} />;
 }

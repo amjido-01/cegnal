@@ -5,13 +5,20 @@ import { ApiResponse } from "@/types";
 
 // Top Trader Type
 export interface TopTrader {
-  zoneName: string;
-  description: string;
-  avatarUrl: string;
-  createdBy: string;
-  noOfMembers: number;
-  price: number;
+  _id: string;
+  email: string;
+  image?: string;
+  firstName?: string;
+  lastName?: string;
+  middleName?: string;
+  isOnline: boolean;
+  password: string;
+  phone: string;
+  role: "ANALYST" | "TRADER" | string;
+  username: string;
+  __v: number;
 }
+
 
 // Response Type
 export interface TopTradersResponse {
@@ -29,7 +36,7 @@ export const useTopTraders = () => {
     queryKey: traderKeys.topTraders(),
     queryFn: async (): Promise<TopTrader[]> => {
       const { data } = await api.get<ApiResponse<TopTrader[]>>(
-        "/user/dashboard"
+        "/user/top-traders"
       );
       if (data?.responseSuccessful) {
         return data.responseBody;

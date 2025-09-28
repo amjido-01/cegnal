@@ -34,3 +34,29 @@ export interface ApiResponse<T> {
   responseMessage: string;
   responseBody: T;
 }
+
+export interface Trader {
+  _id: string;
+  email: string;
+  image?: string;
+  firstName?: string;
+  lastName?: string;
+  middleName?: string;
+  isOnline: boolean;
+  password: string;
+  phone: string;
+  role: "ANALYST" | "TRADER" | string;
+  username: string;
+  __v: number;
+}
+
+export interface Zone {
+  id: string;
+  zoneName: string;
+  description: string;
+  avatarUrl: string;
+  createdBy: string;
+  noOfMembers: number;
+  isPaid: boolean;
+  price: number;
+};
