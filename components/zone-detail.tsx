@@ -18,21 +18,21 @@ interface TraderDetailProps {
 
 // Mock catalog images for now
 const CATALOG_IMAGES = [
-  "/user.jpg",
-  "/user.jpg",
-  "/user.jpg",
-  "/user.jpg",
-  "/user.jpg",
-  "/user.jpg",
+  "/forex-trading-chart-with-candlesticks.jpg",
+  "/forex-trading-chart-with-candlesticks.jpg",
+  "/forex-trading-chart-with-candlesticks.jpg",
+  "/forex-trading-chart-with-candlesticks.jpg",
+  "/forex-trading-chart-with-candlesticks.jpg",
+  "/forex-trading-chart-with-candlesticks.jpg",
 ];
 
 const AUTO_ADVANCE_INTERVAL = 3000;
 
 export default function ZoneDetail({ zone, onBack }: TraderDetailProps) {
   const router = useRouter();
-  const { topTraders } = useTopTraders()
-  const { zones, isFetchingZones, zonesError } = useZones()
-  console.log(zone.id, "zones")
+  const { topTraders } = useTopTraders();
+  const { zones, isFetchingZones, zonesError } = useZones();
+  console.log(zone.id, "zones");
 
   const [showCatalogViewer, setShowCatalogViewer] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -46,7 +46,6 @@ export default function ZoneDetail({ zone, onBack }: TraderDetailProps) {
     setCurrentImageIndex(0);
     setIsPaused(false);
   }, []);
-
 
   // ✅ Slideshow handlers
   const nextImage = useCallback(() => {
@@ -122,14 +121,22 @@ export default function ZoneDetail({ zone, onBack }: TraderDetailProps) {
 
     document.addEventListener("keydown", handleKeyPress);
     return () => document.removeEventListener("keydown", handleKeyPress);
-  }, [showCatalogViewer, closeCatalogViewer, nextImage, prevImage, togglePause]);
+  }, [
+    showCatalogViewer,
+    closeCatalogViewer,
+    nextImage,
+    prevImage,
+    togglePause,
+  ]);
 
   // ✅ Stars renderer
   const renderStars = useCallback((rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <span
         key={i}
-        className={`text-lg ${i < rating ? "text-orange-400" : "text-gray-300"}`}
+        className={`text-lg ${
+          i < rating ? "text-orange-400" : "text-gray-300"
+        }`}
       >
         ★
       </span>
@@ -143,33 +150,48 @@ export default function ZoneDetail({ zone, onBack }: TraderDetailProps) {
     setIsPaused(false);
   }, []);
 
-  const handleCloseClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    closeCatalogViewer();
-  }, [closeCatalogViewer]);
-
-  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
+  const handleCloseClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
       closeCatalogViewer();
-    }
-  }, [closeCatalogViewer]);
+    },
+    [closeCatalogViewer]
+  );
 
-  const handleImageContainerClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    togglePause();
-  }, [togglePause]);
+  const handleBackdropClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.target === e.currentTarget) {
+        closeCatalogViewer();
+      }
+    },
+    [closeCatalogViewer]
+  );
 
-  const handleManualNext = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsPaused(true);
-    nextImage();
-  }, [nextImage]);
+  const handleImageContainerClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      togglePause();
+    },
+    [togglePause]
+  );
 
-  const handleManualPrev = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsPaused(true);
-    prevImage();
-  }, [prevImage]);
+  const handleManualNext = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setIsPaused(true);
+      nextImage();
+    },
+    [nextImage]
+  );
+
+  const handleManualPrev = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setIsPaused(true);
+      prevImage();
+    },
+    [prevImage]
+  );
 
   const getProgressBarStyle = useCallback(
     (index: number) => {
@@ -196,12 +218,12 @@ export default function ZoneDetail({ zone, onBack }: TraderDetailProps) {
     reviews = "0",
     subscribers = "0",
     status = "Active",
-    winRate = "N/A",
-    lossRate = "N/A",
+    winRate = "60%",
+    lossRate = "30%",
     // stars = 0,
-    marketType = "General",
+    marketType = "Forex",
     entryFee = "Free",
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } = zone as any;
 
   return (
@@ -224,22 +246,27 @@ export default function ZoneDetail({ zone, onBack }: TraderDetailProps) {
         {/* Avatar + Name */}
         <section className="flex flex-col items-start mb-6 px-2">
           <Avatar className="w-[90px] h-[90px] mb-4">
-            <AvatarImage src={avatar} alt={`${name} avatar`} />
+            <AvatarImage
+              src="/user.jpg"
+              alt={`${name} avatar`}
+            />
             <AvatarFallback>{name[0]}</AvatarFallback>
           </Avatar>
+
           <h2 className="text-[39px] font-medium text-[#151515] mb-3">
             {zone.zoneName}
           </h2>
-          <p className="text-[16px] text-[#5D5D5D]">
-           {zone.description}
-          </p>
+          <p className="text-[16px] text-[#5D5D5D]">{zone.description}</p>
         </section>
 
         {/* Stats */}
         <section className="space-y-4 mb-8 text-[#5D5D5D] text-[16px]">
           <div className="flex justify-between px-2 py-3 border-b-2 border-[#D1D1D1]">
             <span>Status</span>
-            <Badge variant="secondary" className="border-[#09DE78] bg-white text-[#09DE78]">
+            <Badge
+              variant="secondary"
+              className="border-[#09DE78] bg-white text-[#09DE78]"
+            >
               <BadgeCheckIcon /> {status}
             </Badge>
           </div>
@@ -285,12 +312,7 @@ export default function ZoneDetail({ zone, onBack }: TraderDetailProps) {
         </section>
 
         {/* Join Button */}
-        <Link
-          href={`/payment/${zone.id}`}
-          className="w-full bg-[#2E5DFC] hover:bg-blue-700 text-white py-2 text-lg font-medium rounded-lg text-center block"
-        >
-          Join now - {entryFee}
-        </Link>
+       
       </main>
 
       {/* Catalog Viewer */}
@@ -299,19 +321,19 @@ export default function ZoneDetail({ zone, onBack }: TraderDetailProps) {
           className="fixed inset-0 bg-black z-50 flex flex-col"
           onClick={handleCloseClick}
         >
-           <header className="flex items-center justify-between p-4 text-white">
-      <h2>
-        View Catalog ({currentImageIndex + 1} of {CATALOG_IMAGES.length})
-      </h2>
-      <button
-        onClick={closeCatalogViewer}   // ✅ Direct call, no stopPropagation
-        className="p-2 hover:bg-white/10 rounded-full transition-colors"
-        type="button"
-        aria-label="Close catalog viewer"
-      >
-        <X className="w-6 h-6" />
-      </button>
-    </header>
+          <header className="flex items-center justify-between p-4 text-white">
+            <h2>
+              View Catalog ({currentImageIndex + 1} of {CATALOG_IMAGES.length})
+            </h2>
+            <button
+              onClick={closeCatalogViewer} // ✅ Direct call, no stopPropagation
+              className="p-2 hover:bg-white/10 rounded-full transition-colors"
+              type="button"
+              aria-label="Close catalog viewer"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </header>
 
           {/* Progress Bars */}
           <div className="flex justify-center gap-2 px-4 mb-4">

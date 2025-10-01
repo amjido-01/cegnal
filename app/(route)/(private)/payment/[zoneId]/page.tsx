@@ -37,7 +37,6 @@ export default function PaymentPage() {
 
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedPayment, setSelectedPayment] = useState("");
-  const [email, setEmail] = useState("");
 
   const handleBack = () => {
     if (currentStep === 1) {
