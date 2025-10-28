@@ -50,13 +50,44 @@ export interface Trader {
   __v: number;
 }
 
+// In your types file
 export interface Zone {
   id: string;
   zoneName: string;
   description: string;
-  avatarUrl: string;
-  createdBy: string;
-  noOfMembers: number;
   isPaid: boolean;
   price: number;
-};
+  noOfMembers: number;
+}
+
+export interface TopAnalyst {
+  _id: string
+  username: string
+  email: string
+  phone: string
+  firstName: string
+  lastName: string
+  middleName?: string
+  password: string
+  role: "ANALYST" | "ADMIN" | "USER" // add other roles if needed
+  isOnline: boolean
+  createdAt: string // ISO date string
+  updatedAt: string // ISO date string
+  __v: number
+}
+
+export interface Analyst {
+  _id: string;
+  username: string;
+  email: string;
+  phone: string;
+  firstName: string;
+  lastName: string;
+  middleName?: string;
+  password: string;
+  role: "ANALYST" | "ADMIN" | "USER"; // extend roles if needed
+  isOnline: boolean;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+  __v: number;
+}

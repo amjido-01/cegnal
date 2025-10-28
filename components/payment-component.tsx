@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, ChevronRight, Mail, X } from "lucide-react";
+import { ArrowLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { Badge } from "./ui/badge";
@@ -32,7 +31,6 @@ export default function PaymentComponent({ zone }: PaymentComponentProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedPayment, setSelectedPayment] = useState("");
-  const [email, setEmail] = useState("");
 
   const handleBack = () => {
     if (currentStep === 1) {

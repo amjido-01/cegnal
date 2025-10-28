@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-"use client"
+"use client";
 
-import { Card, CardContent } from "./ui/card"
-import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar"
-import { Star, CheckCircle2 } from "lucide-react"
-import { useZones } from "@/hooks/use-zone"
-import { TopTradersSkeleton } from "./top-traders-skeleton"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Card, CardContent } from "./ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
+import { Star } from "lucide-react";
+import { Button } from "./ui/button";
+import { useZones } from "@/hooks/use-zones";
+import { TopTradersSkeleton } from "./top-traders-skeleton";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -15,53 +16,69 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "./ui/alert-dialog"
-import { Button } from "./ui/button"
+} from "./ui/alert-dialog";
 
 export function Zones() {
-  const { zones, zonesError, isFetchingZones } = useZones()
-  const router = useRouter()
+   // Fetch all zones only once
+  const { allZones, isFetchingAllZones, allZonesError } = useZones("all");
+  const router = useRouter();
 
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedZone, setSelectedZone] = useState<any>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedZone, setSelectedZone] = useState<any>(null);
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star key={i} className={`w-3 h-3 ${i < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
-    ))
-  }
+  // --- Star rendering ---
+  const renderStars = (rating: number) =>
+    Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        className={`w-3 h-3 ${i < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+      />
+    ));
 
+  // --- Handlers ---
   const handleZoneClick = (zone: any) => {
-    if (!zone.isPaid) {
-      router.push(`/payment/${zone.id}`)
-    } else {
-      setSelectedZone(zone)
-      setIsModalOpen(true)
-    }
-  }
+    setSelectedZone(zone);
+    setIsModalOpen(true);
+  };
 
   const handleProceedToZone = (zone: any) => {
-    router.push(`/zone/${zone.id}`)
-  }
+    router.push(`/zone/${zone.id}`);
+  };
 
-  if (isFetchingZones) return <TopTradersSkeleton />
-  if (zonesError) return <div>Error loading products</div>
-  if (!zones || zones.length === 0) return <div>No products found</div>
+  const handleSeeMore = () => {
+    router.push("/dashboard/signal-zone");
+  };
+
+  // --- Conditional rendering ---
+  if (isFetchingAllZones) return <TopTradersSkeleton />;
+  if (allZonesError) return <div>Error loading zones</div>;
+  if (!allZones || allZones.length === 0) return <div>No zones available at the moment.</div>;
+
+    const allZonesTab = allZones?.filter((zone: any) => zone.hasJoined === false);
+  const limitedZones = allZonesTab?.slice(0, 5);
 
   return (
     <div className="mb-6">
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Signal Zones</h3>
+        <button
+          onClick={handleSeeMore}
+          className="text-sm text-blue-600 hover:underline font-medium"
+        >
+          See More
+        </button>
       </div>
 
+      {/* Zone List */}
       <div className="space-y-4">
-        {zones.map((zone, idx) => (
-          <Card key={idx} className="bg-white py-1 shadow-none">
+        {limitedZones?.map((zone) => (
+          <Card key={zone.id} className="bg-white py-1 shadow-none border border-gray-100">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <Avatar className="w-10 h-10">
-                    <AvatarImage src={zone.avatarUrl || "/placeholder.svg"} />
+                    <AvatarImage src={"/placeholder.svg"} />
                     <AvatarFallback>{zone.zoneName[0]}</AvatarFallback>
                   </Avatar>
                   <span className="font-medium text-gray-900">{zone.zoneName}</span>
@@ -72,14 +89,12 @@ export function Zones() {
                 </div>
               </div>
 
-              <div className="bg-[#E7E7E7] rounded-[8px] p-2">
-                <div className="grid grid-cols-3 gap-4 mb-4 p-3 divide-x divide-[#D1D1D1]">
+              <div className="bg-gray-100 rounded-lg p-2">
+                <div className="grid grid-cols-3 gap-4 mb-4 p-3 divide-x divide-gray-300">
                   <div className="text-center">
-                    {zone.isPaid ? (
-                      <p className="font-medium text-gray-900 text-sm">${zone.price}</p>
-                    ) : (
-                      <p className="font-medium text-gray-900 text-sm"></p>
-                    )}
+                    <p className="font-medium text-gray-900 text-sm">
+                      {zone.isPaid ? `$${zone.price}` : "Free"}
+                    </p>
                     <p className="text-xs text-gray-600">Entry Fee</p>
                   </div>
                   <div className="text-center">
@@ -92,52 +107,59 @@ export function Zones() {
                   </div>
                 </div>
 
-                <button
+                <Button
                   onClick={() => handleZoneClick(zone)}
-                  className="w-full bg-[#454545] hover:bg-gray-900 text-white px-4 py-2 rounded-md text-center block"
+                  className="w-full bg-[#454545] hover:bg-gray-900 text-white"
                 >
                   View Details
-                </button>
+                </Button>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
+      {/* Clean Modal */}
       <AlertDialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <AlertDialogContent className="max-w-md">
-          <AlertDialogHeader className="space-y-4">
-            <div className="flex justify-center">
-              <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8 text-blue-600" />
-              </div>
-            </div>
-            <AlertDialogTitle className="text-center text-xl">
-              Are you sure you want to join <span className="text-blue-600">{selectedZone?.zoneName}</span> for free?
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-lg font-semibold text-center">
+              {selectedZone?.zoneName}
             </AlertDialogTitle>
-            <AlertDialogDescription className="sr-only">
-              Confirm joining {selectedZone?.zoneName} zone for free
+            <AlertDialogDescription className="text-center text-sm text-gray-600 mt-2">
+              {selectedZone?.isPaid ? (
+                <>
+                  This is a <strong>paid zone (${selectedZone.price})</strong>.  
+                  You can preview the zone before payment.
+                </>
+              ) : (
+                <>Join this zone for free and start exploring signal insights.</>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="flex-col gap-3 sm:flex-col">
+
+          <AlertDialogFooter className="flex flex-col gap-2 mt-4">
             <Button
               onClick={() => {
                 if (selectedZone) {
-                  handleProceedToZone(selectedZone)
-                  setIsModalOpen(false)
+                  handleProceedToZone(selectedZone);
+                  setIsModalOpen(false);
                 }
               }}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              size="lg"
             >
-              Proceed to Zone
+              Proceed
             </Button>
-            <Button onClick={() => setIsModalOpen(false)} variant="outline" className="w-full" size="lg">
+            <Button
+              onClick={() => setIsModalOpen(false)}
+              variant="outline"
+              className="w-full"
+            >
               Cancel
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

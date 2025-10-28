@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
-
+import { usePayment } from "@/hooks/use-payment";
+import { toast } from "sonner";
+import { useZones } from "@/hooks/use-zone";
+import { notFound } from "next/navigation";
 // 👇 Interface matches your "zone" but with placeholders for missing info
 interface Zone {
   id: string;
@@ -20,9 +23,50 @@ interface Zone {
 }
 
 export default function PaymentPage() {
+  const { initializePayment, isInitializingPayment } = usePayment()
+   const { zones, zonesError, isFetchingZones } = useZones()
   const router = useRouter();
   const params = useParams();
   const { zoneId } = params;
+
+   const [currentStep, setCurrentStep] = useState(1);
+  const [selectedPayment, setSelectedPayment] = useState("");
+
+
+  if (!zoneId) {
+      notFound();
+    }
+
+      
+  if (isFetchingZones) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (zonesError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center text-red-500">
+          <p className="text-xl mb-2">⚠️ Error loading zone</p> {/* ❌ Fix: Changed "zones" to "traders" */}
+          <p className="text-sm text-gray-600">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
+
+    const foundZone = zones?.find((t) => t.id === zoneId);
+
+      if (!foundZone) {
+    notFound(); // ❌ Fix: Use notFound() instead of custom div for consistency
+  }
+
+    
 
   // TODO: replace with real API fetch when ready
   const zone: Zone = {
@@ -35,9 +79,7 @@ export default function PaymentPage() {
     marketType: "Forex",
   };
 
-  const [currentStep, setCurrentStep] = useState(1);
-  const [selectedPayment, setSelectedPayment] = useState("");
-
+ 
   const handleBack = () => {
     if (currentStep === 1) {
       router.back();
@@ -51,13 +93,11 @@ export default function PaymentPage() {
     setCurrentStep(2);
   };
 
-  const handleEmailSubmit = () => {
-    setCurrentStep(3);
+  const handleInintiate = () => {
+    if (!zoneId) return toast.error("Zone ID not found");
+    initializePayment({ zoneId: String(zoneId)});
   };
 
-  const handleProceedToZone = () => {
-    router.push(`/zone/${zone.id}`);
-  };
 
   // ✅ Header Component
   const Header = () => (
@@ -98,7 +138,7 @@ export default function PaymentPage() {
                   <div className="font-medium">
                     <p className="text-[#151515] text-[20px]">Paystack</p>
                     <p className="text-[16px] text-[#5D5D5D]">
-                      Processing fee: $0.03
+                      {`Processing fee: ₦${foundZone.price}`}
                     </p>
                   </div>
                 </div>
@@ -130,11 +170,11 @@ export default function PaymentPage() {
             </h3>
             <div className="bg-gray-50 p-4 rounded-lg mb-10">
               <p className="text-sm text-gray-600 leading-relaxed">
-                • Access to <strong>{zone.name}</strong> trading signals
+                • Access to <strong>{foundZone?.zoneName}</strong> trading signals
                 <br />• Entry fee:{" "}
-                <strong>{zone.entryFee ?? "N/A"}</strong>
+                <strong>₦{foundZone?.price}</strong>
                 <br />• Join{" "}
-                <strong>{zone.subscribers ?? "0"}</strong> active subscribers
+                <strong>{foundZone?.noOfMembers}</strong> active subscribers
                 <br />• Proven{" "}
                 <strong>{zone.winRate ?? "--%"}</strong> win rate record
                 <br />• {zone.marketType ?? "General"} market focus
@@ -144,10 +184,11 @@ export default function PaymentPage() {
             </div>
 
             <Button
-              onClick={handleEmailSubmit}
+              onClick={handleInintiate}
+              disabled={isInitializingPayment}
               className="w-full text-white py-4 text-lg font-medium rounded-lg bg-[#2E5DFC] hover:bg-blue-700"
             >
-              Continue
+               {isInitializingPayment ? "Redirecting..." : "Continue"}
             </Button>
           </div>
         </div>
@@ -155,30 +196,4 @@ export default function PaymentPage() {
     );
   }
 
-  // ✅ Step 3: Success Page
-  return (
-    <div className="space-y-6 text-center mt-28 py-8 px-4 sm:px-10">
-      <div className="flex justify-center mb-7">
-        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-          <Image
-            src="/success.svg"
-            alt="success"
-            width={40}
-            height={40}
-          />
-        </div>
-      </div>
-
-      <h2 className="text-3xl font-bold mb-4 text-[#151515]">
-        This Should Trigger Paystack modal
-      </h2>
-
-      <Button
-        onClick={handleProceedToZone}
-        className="w-full text-white py-4 text-lg font-medium rounded-lg bg-[#2E5DFC] hover:bg-blue-700"
-      >
-        Proceed to Zone
-      </Button>
-    </div>
-  );
 }

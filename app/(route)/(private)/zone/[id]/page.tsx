@@ -2,7 +2,6 @@
 
 import { useParams } from "next/navigation";
 import ZoneDetail from "@/components/zone-detail"; // ❌ Fix: Should be trader-detail, not zone-detail
-import { useTopTraders } from "@/hooks/use-trader";
 import { notFound } from "next/navigation";
 import { useZones } from "@/hooks/use-zone";
 
@@ -10,7 +9,6 @@ export default function Page() {
   const params = useParams();
   const zoneId = params?.id; // ❌ Fix: Extract 'id' from URL params
   
-  const { topTraders, isFetchingTopTraders, topTradersError } = useTopTraders();
   const { zones, zonesError, isFetchingZones } = useZones()
   if (!zoneId) {
     notFound();
@@ -40,8 +38,8 @@ export default function Page() {
   
   // ✅ Find trader by matching URL param with trader._id
   const zone = zones?.find((t) => t.id === zoneId);
+
   
-  console.log(zone, "from trader");
   
   if (!zone) {
     notFound(); // ❌ Fix: Use notFound() instead of custom div for consistency
